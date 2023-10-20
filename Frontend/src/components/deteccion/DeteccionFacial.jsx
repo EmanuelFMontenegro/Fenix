@@ -5,6 +5,7 @@ import axios from "axios";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import { Modal, Box, Typography, Button } from "@mui/material";
+import "./style.scss";
 
 const DeteccionFacial = () => {
   const canvasRef = useRef(null);
@@ -16,6 +17,7 @@ const DeteccionFacial = () => {
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [showRegistroExistenteModal, setShowRegistroExistenteModal] =
     useState(false);
+  const [error, setError] = useState(null);
 
   const handleSnackbarClose = () => {
     setShowSnackbar(false);
@@ -36,113 +38,172 @@ const DeteccionFacial = () => {
   }, [showSnackbar]);
 
   useEffect(() => {
-    const loadModels = async () => {
-      await faceapi.nets.tinyFaceDetector.loadFromUri("/weights");
-      await faceapi.nets.faceLandmark68Net.loadFromUri("/weights");
-      await faceapi.nets.faceRecognitionNet.loadFromUri("/weights");
-      await faceapi.nets.ssdMobilenetv1.loadFromUri("/weights");
-      setModelsLoaded(true);
-    };
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
 
-    loadModels();
-  }, []);
+    if (video && canvas) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    }
+  }, [videoRef, canvasRef]);
+
+  const cargarCamera = () => {
+    const elVideo = videoRef.current;
+
+    navigator.getMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia;
+
+    navigator.getMedia(
+      {
+        video: { width: 640, height: 480 },
+        audio: false,
+      },
+      (stream) => (elVideo.srcObject = stream),
+      console.error
+    );
+  };
 
   useEffect(() => {
-    const startCameraAutomatically = async () => {
+    cargarCamera();
+
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri("/weights"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/weights"),
+      faceapi.nets.faceRecognitionNet.loadFromUri("/weights"),
+      faceapi.nets.ageGenderNet.loadFromUri("/weights"),
+      faceapi.nets.faceExpressionNet.loadFromUri("/weights"),
+    ])
+      .then(() => {
+        setModelsLoaded(true);
+        console.log("Modelos cargados correctamente");
+      })
+      .catch((error) => {
+        setError("Error al cargar los modelos. Por favor, inténtalo de nuevo.");
+        console.error("Error al cargar los modelos:", error);
+      });
+  }, []);
+  const getDominantEmotion = (expressions) => {
+    if (expressions) {
+      const emotionEntries = Object.entries(expressions);
+      if (emotionEntries.length > 0) {
+        const dominantEmotion = emotionEntries.reduce(
+          (prev, current) => (current[1] > prev[1] ? current : prev),
+          emotionEntries[0]
+        );
+        return dominantEmotion[0];
+      }
+    }
+    return "Desconocido";
+  };
+
+  useEffect(() => {
+    const detect = async () => {
       try {
-        const video = videoRef.current;
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-        video.srcObject = stream;
+        const newDetections = await faceapi
+          .detectAllFaces(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions()
+          )
+          .withFaceLandmarks()
+          .withFaceDescriptors()
+          .withAgeAndGender()
+          .withFaceExpressions();
 
-        video.addEventListener("loadedmetadata", () => {
-          const displaySize = {
-            width: video.videoWidth,
-            height: video.videoHeight,
-          };
+        console.log("Rostros detectados:", newDetections);
 
-          const canvas = faceapi.createCanvasFromMedia(video);
-          document.body.append(canvas);
-          const context = canvas.getContext("2d");
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
 
-          faceapi.matchDimensions(canvas, displaySize);
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-          const detect = async () => {
-            try {
-              const newDetections = await faceapi
-                .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceDescriptors();
+        newDetections.forEach(async (detection) => {
+          const box = detection.detection.box;
+          if (box) {
+            const { x, y, width, height } = box;
+            const landmarks = detection.landmarks._positions;
 
-              context.clearRect(0, 0, canvas.width, canvas.height);
+            context.strokeStyle = "yellow";
+            context.lineWidth = 2;
+            context.strokeRect(x, y, width, height);
 
-              newDetections.forEach(async (detection) => {
-                const { x, y, width, height } = detection.detection.box;
-                const landmarks = detection.landmarks._positions;
+            context.fillStyle = "white";
+            landmarks.forEach((point) => {
+              context.beginPath();
+              context.arc(point.x + 20, point.y, 1.5, 0, Math.PI * 2); // Suma 1 a la coordenada x
+              context.fill();
+            });
 
-                context.strokeStyle = "blue";
-                context.lineWidth = 2;
-                context.strokeRect(x, y, width, height);
-
-                context.fillStyle = "blue";
-                landmarks.forEach((point) => {
-                  context.beginPath();
-                  context.arc(point.x, point.y, 2, 0, Math.PI * 2);
-                  context.fill();
-                });
-              });
-
-              requestAnimationFrame(detect);
-            } catch (error) {
-              console.error(error);
-            }
-          };
-
-          detect();
+            context.font = "12px Arial";
+            context.fillStyle = "yellow";
+            context.fillText(
+              `Edad: ${Math.round(detection.age || 0)} años`,
+              x,
+              y - 10
+            );
+            context.fillText(
+              `Género: ${detection.gender || "Desconocido"}`,
+              x,
+              y - 30
+            );
+            context.fillText(
+              `Emociones: ${getDominantEmotion(detection.expressions)}`,
+              x,
+              y - 50
+            );
+          }
         });
       } catch (error) {
-        console.error("Error al acceder a la cámara:", error);
+        setError(
+          "Error en la detección de rostros. Por favor, inténtalo de nuevo."
+        );
+        console.error("Error en la detección de rostros:", error);
       }
     };
 
-    startCameraAutomatically();
-  }, []);
+    if (modelsLoaded) {
+      const interval = setInterval(detect, 50);
+      return () => clearInterval(interval);
+    }
+  }, [modelsLoaded]);
 
   const captureImage = async () => {
     console.log("Capturing image...");
     try {
-      const canvas = faceapi.createCanvasFromMedia(videoRef.current);
-      const context = canvas.getContext("2d");
+      const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-
+      const context = canvas.getContext("2d");
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const capturedImageData = canvas.toDataURL("image/jpeg", 0.6);
 
+      console.log("Datos de la imagen capturada:", capturedImageData);
+
       if (capturedImageData.startsWith("data:image/jpeg;base64,")) {
-        // Realizar reconocimiento facial
         const detections = await faceapi
           .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks()
-          .withFaceDescriptors();
+          .withFaceDescriptors()
+          .withAgeAndGender()
+          .withFaceExpressions();
+
+        console.log("Datos de detección:", detections);
 
         if (detections.length === 1) {
           try {
-            // Validar si el nombre y apellido ya existen
             const response = await axios.get(
               `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
             );
 
             if (response.data.existe) {
-              // Si existe, actualiza los estados de nombre y apellido y muestra el modal
               setNombre(response.data.nombre);
               setApellido(response.data.apellido);
               setShowRegistroExistenteModal(true);
               return;
             } else {
-              // Si no existe, enviar la información al servidor
               const descriptor1 = detections[0].descriptor[0];
               const descriptor2 = detections[0].descriptor[1];
-              console.log("Descriptores:", descriptor1, descriptor2);
 
               const registroResponse = await axios.post(
                 "http://localhost:4000/detect",
@@ -160,38 +221,43 @@ const DeteccionFacial = () => {
               setShowSnackbar(true);
             }
           } catch (error) {
+            setError(
+              "Error al enviar los datos al servidor. Por favor, inténtalo de nuevo."
+            );
             console.error("Error al enviar los datos al servidor:", error);
           }
         } else if (detections.length > 1) {
+          setError("Se detectaron múltiples rostros. Debe haber solo uno.");
           console.error(
             "Se detectaron múltiples rostros. Debe haber solo uno."
           );
-          // Agregar lógica para mostrar mensaje al usuario o desactivar botón de registro
         } else {
+          setError(
+            "No se detectó ningún rostro. Ajuste la cámara o su posición."
+          );
           console.error(
             "No se detectó ningún rostro. Ajuste la cámara o su posición."
           );
-          // Agregar lógica para mostrar mensaje al usuario o desactivar botón de registro
         }
       } else {
+        setError("Error al capturar la imagen: Formato de imagen incorrecto.");
         console.error(
-          "Error al capturar la imagen: Formato de imagen incorrecto"
+          "Error al capturar la imagen: Formato de imagen incorrecto."
         );
       }
     } catch (error) {
+      setError("Error al capturar la imagen. Por favor, inténtalo de nuevo.");
       console.error("Error al capturar la imagen:", error);
     }
   };
 
   return (
     <div style={{ display: "flex" }}>
-      <div>
+      <div className="container">
         <video id="video" autoPlay muted ref={videoRef} />
-        <canvas
-          style={{ position: "absolute", top: 0, left: 0 }}
-          ref={canvasRef}
-        />
+        <canvas ref={canvasRef} className="overlay-canvas" />
       </div>
+
       <div
         style={{
           marginLeft: "10px",
@@ -212,7 +278,7 @@ const DeteccionFacial = () => {
               style={{
                 border: "2px solid aqua",
                 borderRadius: "4px",
-                color: "#4169e1", // Cambié el color del texto al tono de azul más fuerte
+                color: "#4169e1",
               }}
             />
           </label>
@@ -227,7 +293,7 @@ const DeteccionFacial = () => {
               style={{
                 border: "2px solid aqua",
                 borderRadius: "4px",
-                color: "#4169e1", // Cambié el color del texto al tono de azul más fuerte
+                color: "#4169e1",
               }}
             />
           </label>
@@ -241,9 +307,9 @@ const DeteccionFacial = () => {
             style={{
               marginTop: "15px",
               color: "white",
-              fontFamily: "5px", // Cambié el color del texto del botón a aqua
-              backgroundColor: "blue", // Cambié el color de fondo del botón al tono de azul más fuerte
-              borderColor: "#4169e1", // Cambié el color del borde del botón al tono de azul más fuerte
+              fontFamily: "5px",
+              backgroundColor: "blue",
+              borderColor: "#4169e1",
             }}
           >
             Registro Facial
@@ -270,7 +336,7 @@ const DeteccionFacial = () => {
           sx={{
             position: "absolute",
             top: "50%",
-            left: "50%", // Cambié el valor de left
+            left: "50%",
             transform: "translate(-50%, -50%)",
             bgcolor: "background.paper",
             boxShadow: 24,
@@ -292,6 +358,16 @@ const DeteccionFacial = () => {
           </Button>
         </Box>
       </Modal>
+      <Snackbar
+        open={error !== null}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <MuiAlert elevation={6} variant="filled" severity="error">
+          {error}
+        </MuiAlert>
+      </Snackbar>
     </div>
   );
 };
