@@ -20,6 +20,10 @@ const Sidebar = ({ handleButtonClick }) => {
     handleButtonClick(component); // Llama a la función recibida como prop
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("authToken"); // Elimina el token de autenticación.
+    window.location.href = "/login"; // Asegúrate de que "/login" sea la ruta correcta.
+  }; 
   return (
     <div className="sidebar">
       <div className="top">
@@ -106,10 +110,10 @@ const Sidebar = ({ handleButtonClick }) => {
           </Link>
           <Link to="/logout" className="nav-link">
             <li>
-              <button className="nav-button">
-                <ExitToAppIcon className="icon" />
-                <span>Salir</span>
-              </button>
+            <button className="nav-button" onClick={handleLogout}>
+              <ExitToAppIcon className="icon" />
+              <span>Salir</span>
+            </button>
             </li>
           </Link>
         </ul>

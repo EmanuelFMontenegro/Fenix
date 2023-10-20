@@ -1,0 +1,28 @@
+/* styles.css */
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: white;
+}
+
+.container {
+  position: relative; /* Asegura que el contenedor sea posicionado para que el canvas pueda superponerse */
+}
+
+video {
+  border: 2px solid #333;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}

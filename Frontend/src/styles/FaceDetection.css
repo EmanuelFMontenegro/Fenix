@@ -1,0 +1,32 @@
+/* styles.css */
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: white;
+}
+
+.container {
+  position: relative;
+  width: 640px; /* Establece un ancho máximo para el contenedor */
+}
+
+video {
+  border: 2px solid #333;
+  display: block;
+  width: 100%; /* Ajusta el ancho para llenar el contenedor */
+  max-width: 100%; /* Limita el ancho máximo al 100% del contenedor */
+  max-height: 100%; /* Limita la altura máxima al 100% del contenedor */
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  width: 100%; /* Ajusta el ancho del canvas al contenedor */
+  height: 100%; /* Ajusta la altura del canvas al contenedor */
+}

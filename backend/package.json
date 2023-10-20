@@ -11,13 +11,17 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.5.1",
+    "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "canvas": "^2.11.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "express-validator": "^7.0.1",
     "face-api.js": "^0.22.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mysql": "^2.18.1",
     "mysql2": "^3.6.1"
-   
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
