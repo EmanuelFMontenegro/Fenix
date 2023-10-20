@@ -182,3 +182,9 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
+
+
+
+const routesEmpleados = require('./routes/routesEmpleados'); // Importa el enrutador de empleados
+
+app.use('/empleados', routesEmpleados);

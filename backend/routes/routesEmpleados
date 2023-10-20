@@ -1,0 +1,97 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+
+
+// Middleware para el manejo de datos JSON en las solicitudes POST y PUT
+router.use(express.json());
+
+// Endpoint para crear un nuevo empleado (POST)
+router.post('/crear_empleado', async (req, res) => {
+  // Obtener el usuario actual
+  const usuarioActual = req.user;
+
+  // Crear el nuevo empleado
+  const nuevoEmpleado = {
+    usuario_id: 1,
+    horario_laboral: "08:00-17:00",
+    activo: true,
+    registro_rostro_id: null,
+  };
+
+  // Guardar el nuevo empleado en la base de datos
+  const [rows, fields] = await connection.execute('INSERT INTO empleados (usuario_id, horario_laboral, activo, registro_rostro_id) VALUES (?, ?, ?, ?)', [
+    nuevoEmpleado.usuario_id,
+    nuevoEmpleado.horario_laboral,
+    nuevoEmpleado.activo,
+    nuevoEmpleado.registro_rostro_id,
+  ]);
+
+  if (rows.affectedRows !== 1) {
+    return res.status(500).json({ error: 'Error al crear el empleado' });
+  }
+
+  res.status(201).json({ message: 'Empleado creado con éxito', empleado: nuevoEmpleado });
+});
+
+// Endpoint para obtener un empleado por su ID (GET)
+router.get('/obtener_empleado/:empleado_id', async (req, res) => {
+  try {
+    const empleadoId = req.params.empleado_id;
+    const connection = await db();
+    const [rows] = await connection.execute(`
+      SELECT e.*, u.nombre AS usuario_nombre, r.nombre AS rostro_nombre, r.apellido AS rostro_apellido
+      FROM empleados AS e
+      LEFT JOIN usuarios AS u ON e.usuario_id = u.usuario_id
+      LEFT JOIN rostros AS r ON e.registro_rostro_id = r.rostro_id
+      WHERE e.empleado_id = ?
+    `, [empleadoId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Empleado no encontrado' });
+    }
+
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    console.error('Error al obtener el empleado:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Endpoint para actualizar un empleado por su ID (PUT)
+router.put('/actualizar_empleado/:empleado_id', async (req, res) => {
+  try {
+    const empleadoId = req.params.empleado_id;
+    const connection = await db();
+    const { usuario_id, nombre, horario_laboral, activo, registro_rostro_id } = req.body;
+    const empleadoActualizado = {
+      usuario_id,
+      nombre,
+      horario_laboral,
+      activo,
+      registro_rostro_id,
+    };
+
+    await connection.execute('UPDATE empleados SET ? WHERE empleado_id = ?', [empleadoActualizado, empleadoId]);
+    res.status(200).json({ message: 'Empleado actualizado con éxito' });
+  } catch (err) {
+    console.error('Error al actualizar el empleado:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Endpoint para eliminar un empleado por su ID (DELETE)
+router.delete('/eliminar_empleado/:empleado_id', async (req, res) => {
+  try {
+    const empleadoId = req.params.empleado_id;
+    const connection = await db();
+
+    await connection.execute('DELETE FROM empleados WHERE empleado_id = ?', [empleadoId]);
+    res.status(200).json({ message: 'Empleado eliminado con éxito' });
+  } catch (err) {
+    console.error('Error al eliminar el empleado:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  } 
+});
+
+module.exports = router;
