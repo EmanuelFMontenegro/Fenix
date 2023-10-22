@@ -1,0 +1,39 @@
+.modal {
+    z-index: 1000; /* Puedes ajustar este valor según tus necesidades */
+  }
+  
+/* Estilos para los modales de React Bootstrap */
+.modal-content {
+    background-color: #860808; /* Color de fondo del modal */
+    border: none; /* Borde del modal */
+    border-radius: 5px; /* Bordes redondeados del modal */
+    box-shadow: 0px 0px 10px rgba(216, 3, 3, 0.973); /* Sombra del modal */
+    color: #fff; /* Color del texto en el modal */
+  }
+  
+  .modal-header {
+    background-color: #e75804; /* Color de fondo del encabezado del modal */
+    color: #fff; /* Color del texto en el encabezado del modal */
+    border: none; /* Borde del encabezado del modal */
+  }
+  
+  .modal-body {
+   background-color: #860808; /* Estilos para el cuerpo del modal, si es necesario */
+  }
+  
+  .modal-footer {
+    background-color: #e75804; /* Color de fondo del pie del modal */
+    color: #fff; /* Color del texto en el pie del modal */
+    border: none; /* Borde del pie del modal */
+  }
+  
+  /* Estilos para el botón de cierre (close button) en el encabezado del modal */
+  .close {
+    color: #ff0303; /* Color del botón de cierre */
+  }
+  
+  /* Estilos para el fondo oscurecido detrás del modal (modal backdrop) */
+  .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5); /* Color y opacidad del fondo oscurecido */
+  }
+  
