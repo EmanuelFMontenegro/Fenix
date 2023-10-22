@@ -20,10 +20,7 @@
     "face-api.js": "^0.22.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-<<<<<<< HEAD
-=======
     "mysql": "^2.18.1",
->>>>>>> c48c11232e5c98401dea221be5498052d77eb8f8
     "mysql2": "^3.6.1"
   },
   "devDependencies": {

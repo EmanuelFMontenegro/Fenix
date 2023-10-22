@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise'); // Usamos mysql2/promise para la conexi
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: 'root',
+  password: 'Sinley123.',
   database: 'bd_fenix',
 };
 
