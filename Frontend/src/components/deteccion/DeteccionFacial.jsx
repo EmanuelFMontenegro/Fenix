@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
 import { Modal, Box, Typography, Button } from "@mui/material";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./deteccion.scss";
 
 const DeteccionFacial = () => {
   const canvasRef = useRef(null);
@@ -13,13 +14,8 @@ const DeteccionFacial = () => {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [buttonColor, setButtonColor] = useState("primary");
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [showRegistroExistenteModal, setShowRegistroExistenteModal] =
-    useState(false);
-
-  const handleSnackbarClose = () => {
-    setShowSnackbar(false);
-  };
+  const [showRegistroExistenteModal, setShowRegistroExistenteModal] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleModalClose = () => {
     setShowRegistroExistenteModal(false);
@@ -28,122 +24,183 @@ const DeteccionFacial = () => {
   };
 
   useEffect(() => {
-    if (showSnackbar) {
-      setTimeout(() => {
-        setShowSnackbar(false);
-      }, 5000);
-    }
-  }, [showSnackbar]);
+    const cargarCamera = () => {
+      const elVideo = videoRef.current;
+      navigator.getMedia =
+        navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia;
 
-  useEffect(() => {
-    const loadModels = async () => {
-      await faceapi.nets.tinyFaceDetector.loadFromUri("/weights");
-      await faceapi.nets.faceLandmark68Net.loadFromUri("/weights");
-      await faceapi.nets.faceRecognitionNet.loadFromUri("/weights");
-      await faceapi.nets.ssdMobilenetv1.loadFromUri("/weights");
-      setModelsLoaded(true);
+      navigator.getMedia(
+        {
+          video: true,
+          audio: false,
+        },
+        (stream) => {
+          elVideo.srcObject = stream;
+          elVideo.onloadedmetadata = () => {
+            const container = document.querySelector(".container");
+            canvasRef.current.width = container.offsetWidth;
+            canvasRef.current.height = container.offsetHeight;
+          };
+        },
+        (error) => console.error("Error al cargar la cámara:", error)
+      );
     };
 
-    loadModels();
+    cargarCamera();
   }, []);
 
   useEffect(() => {
-    const startCameraAutomatically = async () => {
+    const handleResize = () => {
+      const container = document.querySelector(".container");
+      canvasRef.current.width = container.offsetWidth;
+      canvasRef.current.height = container.offsetHeight;
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri("/weights"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/weights"),
+      faceapi.nets.faceRecognitionNet.loadFromUri("/weights"),
+      faceapi.nets.ageGenderNet.loadFromUri("/weights"),
+      faceapi.nets.faceExpressionNet.loadFromUri("/weights"),
+    ])
+      .then(() => {
+        setModelsLoaded(true);
+      })
+      .catch((error) => {
+        setError("Error al cargar los modelos. Por favor, inténtalo de nuevo.");
+        console.error("Error al cargar los modelos:", error);
+      });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const getDominantEmotion = (expressions) => {
+    if (expressions) {
+      const emotionEntries = Object.entries(expressions);
+      if (emotionEntries.length > 0) {
+        const dominantEmotion = emotionEntries.reduce(
+          (prev, current) => (current[1] > prev[1] ? current : prev),
+          emotionEntries[0]
+        );
+        return dominantEmotion[0];
+      }
+    }
+    return "Desconocido";
+  };
+
+  useEffect(() => {
+    const detect = async () => {
       try {
-        const video = videoRef.current;
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-        video.srcObject = stream;
+        const newDetections = await faceapi
+          .detectAllFaces(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions()
+          )
+          .withFaceLandmarks()
+          .withFaceDescriptors()
+          .withAgeAndGender()
+          .withFaceExpressions();
 
-        video.addEventListener("loadedmetadata", () => {
-          const displaySize = {
-            width: video.videoWidth,
-            height: video.videoHeight,
-          };
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
 
-          const canvas = faceapi.createCanvasFromMedia(video);
-          document.body.append(canvas);
-          const context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-          faceapi.matchDimensions(canvas, displaySize);
+        newDetections.forEach(async (detection) => {
+          const box = detection.detection.box;
+          if (box) {
+            const { x, y, width, height } = box;
+            const landmarks = detection.landmarks._positions;
 
-          const detect = async () => {
-            try {
-              const newDetections = await faceapi
-                .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceDescriptors();
+            context.strokeStyle = "yellow";
+            context.lineWidth = 2;
+            context.strokeRect(x + 16, y, width * 1, height * 1);
 
-              context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "white";
+            landmarks.forEach((point) => {
+              context.beginPath();
+              context.arc(point.x + 18, point.y, 1.4, 0, Math.PI * 2);
+              context.fill();
+            });
 
-              newDetections.forEach(async (detection) => {
-                const { x, y, width, height } = detection.detection.box;
-                const landmarks = detection.landmarks._positions;
-
-                context.strokeStyle = "blue";
-                context.lineWidth = 2;
-                context.strokeRect(x, y, width, height);
-
-                context.fillStyle = "blue";
-                landmarks.forEach((point) => {
-                  context.beginPath();
-                  context.arc(point.x, point.y, 2, 0, Math.PI * 2);
-                  context.fill();
-                });
-              });
-
-              requestAnimationFrame(detect);
-            } catch (error) {
-              console.error(error);
-            }
-          };
-
-          detect();
+            context.font = "12px Arial";
+            context.fillStyle = "yellow";
+            context.fillText(`Edad: ${Math.round(detection.age || 0)} años`, x, y - 10);
+            context.fillText(`Género: ${detection.gender || "Desconocido"}`, x, y - 30);
+            context.fillText(`Emociones: ${getDominantEmotion(detection.expressions)}`, x, y - 50);
+          }
         });
       } catch (error) {
-        console.error("Error al acceder a la cámara:", error);
+        toast.error("Error en la detección de rostros. Por favor, inténtalo de nuevo.");
       }
     };
 
-    startCameraAutomatically();
-  }, []);
+    if (modelsLoaded) {
+      const interval = setInterval(detect, 100);
+      return () => clearInterval(interval);
+    }
+  }, [modelsLoaded]);
+
+  const overwriteRecord = async () => {
+    try {
+      const response = await axios.post("http://localhost:4000/overwrite", {
+        nombre,
+        apellido,
+        imageBlob: capturedImageData,
+        descriptor1,
+        descriptor2,
+      });
+
+      setButtonColor("success");
+      toast.success("¡Empleado registrado Gracias!");
+      setShowRegistroExistenteModal(false);
+    } catch (error) {
+      setError("Error al sobrescribir el registro. Por favor, inténtalo de nuevo.");
+      console.error("Error al sobrescribir el registro:", error);
+    }
+  };
 
   const captureImage = async () => {
-    console.log("Capturing image...");
     try {
-      const canvas = faceapi.createCanvasFromMedia(videoRef.current);
-      const context = canvas.getContext("2d");
+      const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-
+  
+      const context = canvas.getContext("2d");
+      if (!context) {
+        throw new Error("El contexto del lienzo no está disponible.");
+      }
+  
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const capturedImageData = canvas.toDataURL("image/jpeg", 0.6);
-
+  
       if (capturedImageData.startsWith("data:image/jpeg;base64,")) {
-        // Realizar reconocimiento facial
         const detections = await faceapi
           .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks()
-          .withFaceDescriptors();
-
+          .withFaceDescriptors()
+          .withAgeAndGender()
+          .withFaceExpressions();
+  
         if (detections.length === 1) {
           try {
-            // Validar si el nombre y apellido ya existen
-            const response = await axios.get(
-              `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
-            );
-
+            const response = await axios.get(`http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`);
+  
             if (response.data.existe) {
-              // Si existe, actualiza los estados de nombre y apellido y muestra el modal
               setNombre(response.data.nombre);
               setApellido(response.data.apellido);
               setShowRegistroExistenteModal(true);
               return;
             } else {
-              // Si no existe, enviar la información al servidor
               const descriptor1 = detections[0].descriptor[0];
               const descriptor2 = detections[0].descriptor[1];
-              console.log("Descriptores:", descriptor1, descriptor2);
-
+  
               const registroResponse = await axios.post(
                 "http://localhost:4000/detect",
                 {
@@ -154,56 +211,48 @@ const DeteccionFacial = () => {
                   descriptor2,
                 }
               );
-
-              console.log(registroResponse.data);
+  
               setButtonColor("success");
-              setShowSnackbar(true);
+              toast.success("¡Empleado registrado Gracias!");
             }
           } catch (error) {
+            toast.error("Se perdió la conexión con el servidor. Por favor, inténtalo de nuevo.");
             console.error("Error al enviar los datos al servidor:", error);
           }
-        } else if (detections.length > 1) {
-          console.error(
-            "Se detectaron múltiples rostros. Debe haber solo uno."
-          );
-          // Agregar lógica para mostrar mensaje al usuario o desactivar botón de registro
         } else {
-          console.error(
-            "No se detectó ningún rostro. Ajuste la cámara o su posición."
-          );
-          // Agregar lógica para mostrar mensaje al usuario o desactivar botón de registro
+          toast.error("No se detectó ningún rostro. Inténtalo de nuevo.");
         }
       } else {
-        console.error(
-          "Error al capturar la imagen: Formato de imagen incorrecto"
-        );
+        toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
       }
     } catch (error) {
-      console.error("Error al capturar la imagen:", error);
+      toast.error("Error al capturar la imagen o procesar la detección. Por favor, inténtalo de nuevo.");
+      console.error("Error al capturar la imagen o procesar la detección:", error);
     }
   };
+  
 
   return (
     <div style={{ display: "flex" }}>
-      <div>
+      <div className="container" style={{ marginRight: "10px" }}>
         <video id="video" autoPlay muted ref={videoRef} />
-        <canvas
-          style={{ position: "absolute", top: 0, left: 0 }}
-          ref={canvasRef}
-        />
+        <canvas ref={canvasRef} className="overlay-canvas" />
       </div>
+
       <div
         style={{
-          marginLeft: "10px",
           border: "1px solid #ccc",
           padding: "10px",
           borderRadius: "8px",
           boxShadow: "2px 2px 6px rgba(0, 0, 0, 0.1)",
+          marginLeft: "0px",
         }}
       >
         <div className="mt-3">
-          <label>
-            Nombre:
+          <label
+            style={{ color: "red", fontWeight: "bold", alignItems: "center" }}
+          >
+            Nombre
             <input
               type="text"
               value={nombre}
@@ -212,13 +261,13 @@ const DeteccionFacial = () => {
               style={{
                 border: "2px solid aqua",
                 borderRadius: "4px",
-                color: "#4169e1", // Cambié el color del texto al tono de azul más fuerte
+                color: "#4169e1",
               }}
             />
           </label>
           <br />
-          <label>
-            Apellido:
+          <label style={{ color: "red", fontWeight: "bold" }}>
+            Apellido
             <input
               type="text"
               value={apellido}
@@ -227,7 +276,7 @@ const DeteccionFacial = () => {
               style={{
                 border: "2px solid aqua",
                 borderRadius: "4px",
-                color: "#4169e1", // Cambié el color del texto al tono de azul más fuerte
+                color: "#4169e1",
               }}
             />
           </label>
@@ -241,59 +290,81 @@ const DeteccionFacial = () => {
             style={{
               marginTop: "15px",
               color: "white",
-              fontFamily: "5px", // Cambié el color del texto del botón a aqua
-              backgroundColor: "blue", // Cambié el color de fondo del botón al tono de azul más fuerte
-              borderColor: "#4169e1", // Cambié el color del borde del botón al tono de azul más fuerte
+              fontFamily: "Arial, sans-serif",
+              backgroundColor: "blue",
+              borderColor: "#4169e1",
             }}
           >
             Registro Facial
           </button>
         </div>
       </div>
-      <Snackbar
-        open={showSnackbar}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <MuiAlert elevation={6} variant="filled" severity="warning">
-          ¡Empleado registrado Gracias!
-        </MuiAlert>
-      </Snackbar>
+
       <Modal
         open={showRegistroExistenteModal}
         onClose={handleModalClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%", // Cambié el valor de left
-            transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            maxWidth: 400,
-            width: "80%",
-          }}
-        >
-          <Typography variant="h6" component="h2" sx={{ color: "green" }}>
-            Ya se encuentra registrado el empleado !!!
+        <Box sx={style}>
+          <Typography
+            id="modal-modal-title"
+            variant="h6"
+            component="h2"
+            style={{ paddingBottom: "10px" }}
+          >
+            Registro de Empleado Existente !!!
+          </Typography>
+          <Typography
+            id="modal-modal-description"
+            variant="p"
+            component="p"
+            style={{ paddingBottom: "10px" }}
+          >
+            Ya existe un registro para este Empleado. ¿Deseas Actualizarlo?
           </Typography>
           <Button
+            style={{
+              margin: "0px 20px 10px 0px",
+              background: "green",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+            }}
             variant="contained"
-            color="error"
-            sx={{ mt: 2 }}
+            onClick={overwriteRecord}
+          >
+            Si
+          </Button>
+          <Button
+            style={{
+              margin: "0px 10px 10px 0px",
+              background: "red",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+            }}
+            variant="contained"
             onClick={handleModalClose}
           >
-            Cerrar
+            No
           </Button>
         </Box>
       </Modal>
     </div>
   );
+};
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
 };
 
 export default DeteccionFacial;
