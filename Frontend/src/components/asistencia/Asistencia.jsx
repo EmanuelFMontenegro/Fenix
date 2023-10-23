@@ -3,6 +3,8 @@ import { Button, Grid, Typography } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import * as faceapi from "face-api.js";
 import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Asistencia = () => {
   const [deteccionCompletada, setDeteccionCompletada] = useState(false);
@@ -38,7 +40,20 @@ const Asistencia = () => {
               context.clearRect(0, 0, canvas.width, canvas.height);
 
               if (newDetections.length > 0) {
-                setDeteccionCompletada(true);
+                const faceDescriptor = newDetections[0].descriptor;
+                const response = await axios.post(
+                  "http://localhost:4000/validate",
+                  { faceDescriptor },
+                  { headers: { "Content-Type": "application/json" } }
+                );
+
+                if (response.data.existe) {
+                  toast.success("¡Rostro registrado!");
+                  setEntradaRegistrada(false);
+                  setSalidaRegistrada(false);
+                } else {
+                  toast.info("Rostro no registrado. ¿Deseas registrarlo?");
+                }
               } else {
                 setDeteccionCompletada(false);
               }
@@ -66,6 +81,19 @@ const Asistencia = () => {
 
     startCameraAutomatically();
   }, []);
+  useEffect(() => {
+    const loadModels = async () => {
+      // Cargar los modelos necesarios
+      await faceapi.nets.tinyFaceDetector.loadFromUri("/weights");
+      await faceapi.nets.faceLandmark68Net.loadFromUri("/weights");
+      await faceapi.nets.faceRecognitionNet.loadFromUri("/weights");
+
+      // Empezar la detección una vez que los modelos estén cargados
+      startCameraAutomatically();
+    };
+
+    loadModels();
+  }, []);
 
   const handleEntradaClick = () => {
     // Lógica para registrar la entrada
@@ -77,6 +105,29 @@ const Asistencia = () => {
     // Lógica para registrar la salida
     setSalidaRegistrada(true);
     console.log("Registro de salida");
+  };
+
+  const handleRostroDetectado = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
+      );
+
+      if (response.data.existe) {
+        // Si el rostro ya está registrado
+        toast.success("¡Rostro registrado!");
+        setEntradaRegistrada(false);
+        setSalidaRegistrada(false);
+      } else {
+        // Si el rostro no está registrado
+        toast.info("Rostro no registrado. ¿Deseas registrarlo?");
+      }
+    } catch (error) {
+      toast.error(
+        "Se perdió la conexión con el servidor. Por favor, inténtalo de nuevo."
+      );
+      console.error("Error al enviar los datos al servidor:", error);
+    }
   };
 
   return (

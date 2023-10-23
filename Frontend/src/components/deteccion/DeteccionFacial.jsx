@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
 import { Modal, Box, Typography, Button } from "@mui/material";
-import "./style.scss";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./deteccion.scss";
 
 const DeteccionFacial = () => {
   const canvasRef = useRef(null);
@@ -14,14 +14,9 @@ const DeteccionFacial = () => {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [buttonColor, setButtonColor] = useState("primary");
-  const [showSnackbar, setShowSnackbar] = useState(false);
   const [showRegistroExistenteModal, setShowRegistroExistenteModal] =
     useState(false);
   const [error, setError] = useState(null);
-
-  const handleSnackbarClose = () => {
-    setShowSnackbar(false);
-  };
 
   const handleModalClose = () => {
     setShowRegistroExistenteModal(false);
@@ -30,43 +25,41 @@ const DeteccionFacial = () => {
   };
 
   useEffect(() => {
-    if (showSnackbar) {
-      setTimeout(() => {
-        setShowSnackbar(false);
-      }, 5000);
-    }
-  }, [showSnackbar]);
+    const cargarCamera = () => {
+      const elVideo = videoRef.current;
+      navigator.getMedia =
+        navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia;
 
-  useEffect(() => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
+      navigator.getMedia(
+        {
+          video: true,
+          audio: false,
+        },
+        (stream) => {
+          elVideo.srcObject = stream;
+          elVideo.onloadedmetadata = () => {
+            const container = document.querySelector(".container");
+            canvasRef.current.width = container.offsetWidth;
+            canvasRef.current.height = container.offsetHeight;
+          };
+        },
+        (error) => console.error("Error al cargar la cámara:", error)
+      );
+    };
 
-    if (video && canvas) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-    }
-  }, [videoRef, canvasRef]);
-
-  const cargarCamera = () => {
-    const elVideo = videoRef.current;
-
-    navigator.getMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia;
-
-    navigator.getMedia(
-      {
-        video: { width: 640, height: 480 },
-        audio: false,
-      },
-      (stream) => (elVideo.srcObject = stream),
-      console.error
-    );
-  };
-
-  useEffect(() => {
     cargarCamera();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const container = document.querySelector(".container");
+      canvasRef.current.width = container.offsetWidth;
+      canvasRef.current.height = container.offsetHeight;
+    };
+
+    window.addEventListener("resize", handleResize);
 
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri("/weights"),
@@ -77,13 +70,17 @@ const DeteccionFacial = () => {
     ])
       .then(() => {
         setModelsLoaded(true);
-        console.log("Modelos cargados correctamente");
       })
       .catch((error) => {
         setError("Error al cargar los modelos. Por favor, inténtalo de nuevo.");
         console.error("Error al cargar los modelos:", error);
       });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
+
   const getDominantEmotion = (expressions) => {
     if (expressions) {
       const emotionEntries = Object.entries(expressions);
@@ -111,8 +108,6 @@ const DeteccionFacial = () => {
           .withAgeAndGender()
           .withFaceExpressions();
 
-        console.log("Rostros detectados:", newDetections);
-
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
 
@@ -126,12 +121,12 @@ const DeteccionFacial = () => {
 
             context.strokeStyle = "yellow";
             context.lineWidth = 2;
-            context.strokeRect(x, y, width, height);
+            context.strokeRect(x + 16, y, width * 1, height * 1);
 
             context.fillStyle = "white";
             landmarks.forEach((point) => {
               context.beginPath();
-              context.arc(point.x + 20, point.y, 1.5, 0, Math.PI * 2); // Suma 1 a la coordenada x
+              context.arc(point.x + 18, point.y, 1.4, 0, Math.PI * 2);
               context.fill();
             });
 
@@ -155,21 +150,40 @@ const DeteccionFacial = () => {
           }
         });
       } catch (error) {
-        setError(
+        toast.error(
           "Error en la detección de rostros. Por favor, inténtalo de nuevo."
         );
-        console.error("Error en la detección de rostros:", error);
       }
     };
 
     if (modelsLoaded) {
-      const interval = setInterval(detect, 50);
+      const interval = setInterval(detect, 100);
       return () => clearInterval(interval);
     }
   }, [modelsLoaded]);
 
+  const overwriteRecord = async () => {
+    try {
+      const response = await axios.post("http://localhost:4000/overwrite", {
+        nombre,
+        apellido,
+        imageBlob: capturedImageData,
+        descriptor1,
+        descriptor2,
+      });
+
+      setButtonColor("success");
+      toast.success("¡Empleado registrado Gracias!");
+      setShowRegistroExistenteModal(false);
+    } catch (error) {
+      setError(
+        "Error al sobrescribir el registro. Por favor, inténtalo de nuevo."
+      );
+      console.error("Error al sobrescribir el registro:", error);
+    }
+  };
+
   const captureImage = async () => {
-    console.log("Capturing image...");
     try {
       const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
@@ -178,8 +192,6 @@ const DeteccionFacial = () => {
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const capturedImageData = canvas.toDataURL("image/jpeg", 0.6);
 
-      console.log("Datos de la imagen capturada:", capturedImageData);
-
       if (capturedImageData.startsWith("data:image/jpeg;base64,")) {
         const detections = await faceapi
           .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
@@ -187,8 +199,6 @@ const DeteccionFacial = () => {
           .withFaceDescriptors()
           .withAgeAndGender()
           .withFaceExpressions();
-
-        console.log("Datos de detección:", detections);
 
         if (detections.length === 1) {
           try {
@@ -216,60 +226,53 @@ const DeteccionFacial = () => {
                 }
               );
 
-              console.log(registroResponse.data);
               setButtonColor("success");
-              setShowSnackbar(true);
+              toast.success("¡Empleado registrado Gracias!");
             }
           } catch (error) {
-            setError(
-              "Error al enviar los datos al servidor. Por favor, inténtalo de nuevo."
+            toast.error(
+              "Se perdió la conexión con el servidor. Por favor, inténtalo de nuevo."
             );
             console.error("Error al enviar los datos al servidor:", error);
           }
-        } else if (detections.length > 1) {
-          setError("Se detectaron múltiples rostros. Debe haber solo uno.");
-          console.error(
-            "Se detectaron múltiples rostros. Debe haber solo uno."
-          );
         } else {
-          setError(
-            "No se detectó ningún rostro. Ajuste la cámara o su posición."
-          );
-          console.error(
-            "No se detectó ningún rostro. Ajuste la cámara o su posición."
-          );
+          toast.error("No se detectó ningún rostro. Inténtalo de nuevo.");
         }
       } else {
-        setError("Error al capturar la imagen: Formato de imagen incorrecto.");
-        console.error(
-          "Error al capturar la imagen: Formato de imagen incorrecto."
-        );
+        toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
       }
     } catch (error) {
-      setError("Error al capturar la imagen. Por favor, inténtalo de nuevo.");
-      console.error("Error al capturar la imagen:", error);
+      toast.error(
+        "Error al capturar la imagen o procesar la detección. Por favor, inténtalo de nuevo."
+      );
+      console.error(
+        "Error al capturar la imagen o procesar la detección:",
+        error
+      );
     }
   };
 
   return (
     <div style={{ display: "flex" }}>
-      <div className="container">
+      <div className="container" style={{ marginRight: "10px" }}>
         <video id="video" autoPlay muted ref={videoRef} />
         <canvas ref={canvasRef} className="overlay-canvas" />
       </div>
 
       <div
         style={{
-          marginLeft: "10px",
           border: "1px solid #ccc",
           padding: "10px",
           borderRadius: "8px",
           boxShadow: "2px 2px 6px rgba(0, 0, 0, 0.1)",
+          marginLeft: "0px",
         }}
       >
         <div className="mt-3">
-          <label>
-            Nombre:
+          <label
+            style={{ color: "red", fontWeight: "bold", alignItems: "center" }}
+          >
+            Nombre
             <input
               type="text"
               value={nombre}
@@ -283,8 +286,8 @@ const DeteccionFacial = () => {
             />
           </label>
           <br />
-          <label>
-            Apellido:
+          <label style={{ color: "red", fontWeight: "bold" }}>
+            Apellido
             <input
               type="text"
               value={apellido}
@@ -307,7 +310,7 @@ const DeteccionFacial = () => {
             style={{
               marginTop: "15px",
               color: "white",
-              fontFamily: "5px",
+              fontFamily: "Arial, sans-serif",
               backgroundColor: "blue",
               borderColor: "#4169e1",
             }}
@@ -316,60 +319,72 @@ const DeteccionFacial = () => {
           </button>
         </div>
       </div>
-      <Snackbar
-        open={showSnackbar}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <MuiAlert elevation={6} variant="filled" severity="warning">
-          ¡Empleado registrado Gracias!
-        </MuiAlert>
-      </Snackbar>
+
       <Modal
         open={showRegistroExistenteModal}
         onClose={handleModalClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            maxWidth: 400,
-            width: "80%",
-          }}
-        >
-          <Typography variant="h6" component="h2" sx={{ color: "green" }}>
-            Ya se encuentra registrado el empleado !!!
+        <Box sx={style}>
+          <Typography
+            id="modal-modal-title"
+            variant="h6"
+            component="h2"
+            style={{ paddingBottom: "10px" }}
+          >
+            Registro de Empleado Existente !!!
+          </Typography>
+          <Typography
+            id="modal-modal-description"
+            variant="p"
+            component="p"
+            style={{ paddingBottom: "10px" }}
+          >
+            Ya existe un registro para este Empleado. ¿Deseas Actualizarlo?
           </Typography>
           <Button
+            style={{
+              margin: "0px 20px 10px 0px",
+              background: "green",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+            }}
             variant="contained"
-            color="error"
-            sx={{ mt: 2 }}
+            onClick={overwriteRecord}
+          >
+            Si
+          </Button>
+          <Button
+            style={{
+              margin: "0px 10px 10px 0px",
+              background: "red",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+            }}
+            variant="contained"
             onClick={handleModalClose}
           >
-            Cerrar
+            No
           </Button>
         </Box>
       </Modal>
-      <Snackbar
-        open={error !== null}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <MuiAlert elevation={6} variant="filled" severity="error">
-          {error}
-        </MuiAlert>
-      </Snackbar>
     </div>
   );
+};
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
 };
 
 export default DeteccionFacial;

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
-import DeteccionFacial from "../../components/deteccion/DeteccionFacial";
 import "../home/home.scss";
 
 const Home = () => {

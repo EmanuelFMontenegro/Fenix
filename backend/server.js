@@ -6,7 +6,7 @@ const canvas = require("canvas");
 const faceapi = require("face-api.js");
 const cors = require("cors");
 const { Canvas, Image, ImageData } = canvas;
-const db = require("./db"); // Asegúrate de que db.js configure correctamente la conexión a la base de datos
+const db = require("./db");
 
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
@@ -31,6 +31,7 @@ app.use(
 );
 
 app.use(express.static(path.join(__dirname, "build")));
+app.use("/weights", express.static("weights"));
 
 app.post("/detect", async (req, res) => {
   console.log("Solicitud POST recibida en /detect");
@@ -85,42 +86,6 @@ app.post("/detect", async (req, res) => {
   }
 });
 
-app.post("/recognize-face", async (req, res) => {
-  console.log("Solicitud POST recibida en /recognize-face");
-  try {
-    const { descriptor1, descriptor2 } = req.body;
-
-    console.log("Descriptores recibidos:", { descriptor1, descriptor2 });
-
-    const existingRecord = await checkExistingDescriptors(
-      descriptor1,
-      descriptor2
-    );
-
-    res.json({ existe: existingRecord });
-  } catch (error) {
-    console.error("Error al procesar los descriptores:", error);
-    res.status(500).json({ error: "Error al procesar los descriptores" });
-  }
-});
-
-async function checkExistingDescriptors(descriptor1, descriptor2) {
-  return new Promise((resolve, reject) => {
-    const sql =
-      "SELECT * FROM rostros WHERE descriptor1 = ? AND descriptor2 = ?";
-    const values = [JSON.stringify(descriptor1), JSON.stringify(descriptor2)];
-
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("Error al buscar en la base de datos:", err);
-        reject(err);
-      } else {
-        resolve(result.length > 0);
-      }
-    });
-  });
-}
-
 app.get("/validate", async (req, res) => {
   try {
     const { nombre, apellido } = req.query;
@@ -129,33 +94,6 @@ app.get("/validate", async (req, res) => {
   } catch (error) {
     console.error("Error al verificar el registro:", error);
     res.status(500).json({ error: "Error al verificar el registro" });
-  }
-});
-
-app.post("/check-face", async (req, res) => {
-  console.log("Solicitud POST recibida en /check-face");
-  try {
-    const { imageBlob } = req.body;
-    const response = await axios.get(`data:image/jpeg;base64,${imageBlob}`, {
-      responseType: "arraybuffer",
-    });
-    const image = await canvas.loadImage(Buffer.from(response.data));
-    const detections = await faceapi
-      .detectSingleFace(
-        image,
-        new faceapi.TinyFaceDetectorOptions({ inputSize: 512 })
-      )
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-
-    if (detections) {
-      res.json({ existe: true });
-    } else {
-      res.json({ existe: false });
-    }
-  } catch (error) {
-    console.error("Error al procesar la imagen:", error);
-    res.status(500).json({ error: "Error al procesar la imagen" });
   }
 });
 
@@ -174,6 +112,56 @@ async function checkExistingRecord(nombre, apellido) {
     });
   });
 }
+app.post("/asistencia", async (req, res) => {
+  try {
+    const { nombre, apellido, descriptor1, descriptor2 } = req.query;
+
+    // Busca en la base de datos un rostro con el nombre y apellido proporcionados
+    const [rostro] = await connection
+      .execute("SELECT * FROM rostros WHERE nombre = ? AND apellido = ?", [
+        nombre,
+        apellido,
+      ])
+      .catch((error) => {
+        console.error("Error en la consulta de la base de datos:", error);
+      });
+
+    if (rostro && rostro.length > 0) {
+      // Si se encontró un rostro con el nombre y apellido proporcionados,
+      // compara los descriptores faciales
+      const distancia1 = faceapi.euclideanDistance(
+        new Float32Array(JSON.parse(rostro[0].descriptor1)),
+        new Float32Array(descriptor1)
+      );
+
+      const distancia2 = faceapi.euclideanDistance(
+        new Float32Array(JSON.parse(rostro[0].descriptor2)),
+        new Float32Array(descriptor2)
+      );
+
+      // Establece un umbral para determinar si los rostros son suficientemente similares
+      const umbral = 0.6;
+
+      if (distancia1 < umbral && distancia2 < umbral) {
+        // Si ambas distancias son menores que el umbral, consideramos que el rostro es válido
+        res.json({
+          existe: true,
+          nombre: rostro[0].nombre,
+          apellido: rostro[0].apellido,
+        });
+      } else {
+        // Si alguna de las distancias es mayor que el umbral, el rostro no es suficientemente similar
+        res.json({ existe: false });
+      }
+    } else {
+      // Si no se encontró un rostro con el nombre y apellido proporcionados
+      res.json({ existe: false });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error en el servidor" });
+  }
+});
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
