@@ -8,9 +8,12 @@ import ForgotPassword from './components/ForgotPassword';
 import Administrador from './components/Administrador';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import AuthenticationGuard from './components/AuthenticationGuard';
-import PanelDeControl from "./components/PanelDeControl"; // Asegúrate de importar PanelDeControl desde la ubicación correcta
+import PanelDeControl from "./components/PanelDeControl"; 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Empleados from '../src/components/Empleados'
+
+
 
 const App = () => {
   return (
@@ -29,9 +32,10 @@ const App = () => {
                 <div className="container">
                   <Sidebar />
                   <Routes>
-                    <Route path="/" element={<Home />} /> {/* Ruta raíz muestra el componente Home */}
-                    <Route path="/paneldecontrol" element={<PanelDeControl />} /> {/* Agrega esta ruta */}
+                    <Route path="/" element={<Home />} /> 
+                    <Route path="/paneldecontrol" element={<PanelDeControl />} /> 
                     <Route path="/administrador" element={<Administrador />} />
+                    <Route path="/Empleados" element={<Empleados />} />
                   </Routes>
                 </div>
               </AuthenticationGuard>
