@@ -1,0 +1,250 @@
+.panel-control {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: black;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+  margin-right: 250px;
+}
+
+.panel-control .top {
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.panel-control .top .logo {
+  width: 90px;
+  margin-top: 20px;
+  margin-right: 10px;
+  background-color: black;
+}
+
+.panel-control .top .text-logo {
+  display: flex;
+  margin-top: 20px;
+  color: #FF1744;
+  font-size: 20px;
+}
+
+.panel-control .divider {
+  margin-bottom: 20px;
+  height: 0;
+  border: 0.5px solid white;
+}
+
+.panel-control .center {
+  width: 250px; /* Añadido ancho para que coincida con el panel de control */
+}
+
+.panel-control .center ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-left: 20rem;
+}
+.panel-control .center .title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FF1744;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.panel-control .center li {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.panel-control .center .nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background 0.3s;
+  width: 100%;
+}
+
+.panel-control .center .nav-button:hover {
+  background: #0b3c5d; /* Azul más fuerte */
+}
+
+.panel-control .center .icon {
+  font-size: 20px;
+  color: #ffffff;
+  margin-right: 10px;
+  margin-top: 3px;
+}
+
+.panel-control .center .text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.panel-control .center span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.panel-control .bottom {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+}
+
+.panel-control .bottom .colorOption {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid #d9b310;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.panel-control .bottom .colorOption:nth-child(1) {
+  background-color: whitesmoke;
+}
+
+.panel-control .bottom .colorOption:nth-child(2) {
+  background-color: #333;
+}
+
+.panel-control .bottom .colorOption:nth-child(3) {
+  background-color: darkblue;
+}
+
+
+
+.panel-control {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: black;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+  margin-right: 250px;
+}
+
+.panel-control .top {
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.panel-control .top .logo {
+  width: 90px;
+  margin-top: 20px;
+  margin-right: 10px;
+  background-color: black;
+}
+
+.panel-control .top .text-logo {
+  display: flex;
+  margin-top: 20px;
+  color: #FF1744;
+  font-size: 20px;
+}
+
+.panel-control .divider {
+  margin-bottom: 20px;
+  height: 0;
+  border: 0.5px solid white;
+}
+
+.panel-control .center {
+  width: 250px; /* Añadido ancho para que coincida con el panel de control */
+}
+
+
+.panel-control .center ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-left: 20rem;
+}
+.panel-control .center .title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FF1744;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.panel-control .center li {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.panel-control .center .nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background 0.3s;
+  width: 100%;
+}
+
+.panel-control .center .nav-button:hover {
+  background: #0b3c5d; /* Azul más fuerte */
+}
+
+.panel-control .center .icon {
+  font-size: 20px;
+  color: #ffffff;
+  margin-right: 10px;
+  margin-top: 3px;
+}
+
+.panel-control .center .text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.panel-control .center span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.panel-control .bottom {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+}
+
+.panel-control .bottom .colorOption {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid #d9b310;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.panel-control .bottom .colorOption:nth-child(1) {
+  background-color: whitesmoke;
+}
+
+.panel-control .bottom .colorOption:nth-child(2) {
+  background-color: #333;
+}
+
+.panel-control .bottom .colorOption:nth-child(3) {
+  background-color: darkblue;
+}

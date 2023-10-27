@@ -8,8 +8,7 @@ const AuthenticationGuard = ({ children }) => {
 
   useEffect(() => {
     return () => {
-      // Lógica para mostrar notificación al desmontar
-      if (!userIsLoggedIn && !notificationShownRef.current) {
+           if (!userIsLoggedIn && !notificationShownRef.current) {
         toast.error('Debes iniciar sesión para acceder a esta página', {
           position: 'top-right',
           autoClose: 5000,

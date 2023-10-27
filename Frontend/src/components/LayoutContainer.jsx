@@ -1,19 +1,31 @@
-// LayoutContainer.jsx
 import React from "react";
 import { styled } from "@mui/system";
+import PanelDeControl from "./PanelDeControl"; 
 
 const Container = styled("div")`
   display: flex;
   height: 100vh;
 `;
 
-const layoutContainer = ({ sidebar, content }) => {
+const Sidebar = styled("div");
+
+const Content = styled("div")`
+  flex: 1; 
+  padding: 20px; 
+`;
+
+const LayoutContainer = () => {
   return (
     <Container>
-      {sidebar}
-      {content}
+      <Sidebar>
+       
+      </Sidebar>
+      <Content>
+        <PanelDeControl />
+        
+      </Content>
     </Container>
   );
 };
 
-export default layoutContainer;
+export default LayoutContainer;
