@@ -11,6 +11,8 @@ const db = require("./db");
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 const app = express();
+app.use(express.json());
+
 const PORT = process.env.PORT || 4000;
 
 app.use(bodyParser.json({ limit: "10mb" }));
@@ -36,14 +38,13 @@ app.use("/weights", express.static("weights"));
 app.post("/detect", async (req, res) => {
   console.log("Solicitud POST recibida en /detect");
   try {
-    const { imageBlob, nombre, apellido, descriptor1, descriptor2 } = req.body;
+    const { imageBlob, nombre, apellido, descriptors } = req.body;
 
     console.log("Datos recibidos:", {
       imageBlob,
       nombre,
       apellido,
-      descriptor1,
-      descriptor2,
+      descriptors,
     });
 
     const existingRecord = await checkExistingRecord(nombre, apellido);
@@ -63,13 +64,12 @@ app.post("/detect", async (req, res) => {
     );
 
     const sql =
-      "INSERT INTO rostros (nombre, apellido, imagen_rostro, descriptor1, descriptor2) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO rostros (nombre, apellido, imagen_rostro, descriptors) VALUES (?, ?, ?, ?)";
     const values = [
       nombre,
       apellido,
       imageName,
-      JSON.stringify(descriptor1),
-      JSON.stringify(descriptor2),
+      JSON.stringify(descriptors), // Guardamos los descriptores como una cadena JSON
     ];
 
     db.query(sql, values, (err, result) => {
@@ -96,7 +96,6 @@ app.get("/validate", async (req, res) => {
     res.status(500).json({ error: "Error al verificar el registro" });
   }
 });
-
 async function checkExistingRecord(nombre, apellido) {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM rostros WHERE nombre = ? AND apellido = ?";
@@ -112,54 +111,33 @@ async function checkExistingRecord(nombre, apellido) {
     });
   });
 }
-app.post("/asistencia", async (req, res) => {
+
+app.get("/obtenerDescriptores", async (req, res) => {
   try {
-    const { nombre, apellido, descriptor1, descriptor2 } = req.query;
-
-    // Busca en la base de datos un rostro con el nombre y apellido proporcionados
-    const [rostro] = await connection
-      .execute("SELECT * FROM rostros WHERE nombre = ? AND apellido = ?", [
-        nombre,
-        apellido,
-      ])
-      .catch((error) => {
-        console.error("Error en la consulta de la base de datos:", error);
-      });
-
-    if (rostro && rostro.length > 0) {
-      // Si se encontró un rostro con el nombre y apellido proporcionados,
-      // compara los descriptores faciales
-      const distancia1 = faceapi.euclideanDistance(
-        new Float32Array(JSON.parse(rostro[0].descriptor1)),
-        new Float32Array(descriptor1)
-      );
-
-      const distancia2 = faceapi.euclideanDistance(
-        new Float32Array(JSON.parse(rostro[0].descriptor2)),
-        new Float32Array(descriptor2)
-      );
-
-      // Establece un umbral para determinar si los rostros son suficientemente similares
-      const umbral = 0.6;
-
-      if (distancia1 < umbral && distancia2 < umbral) {
-        // Si ambas distancias son menores que el umbral, consideramos que el rostro es válido
-        res.json({
-          existe: true,
-          nombre: rostro[0].nombre,
-          apellido: rostro[0].apellido,
-        });
+    const sql = "SELECT descriptors FROM rostros";
+    db.query(sql, (err, result) => {
+      if (err) {
+        console.error("Error al obtener descriptores:", err);
+        res.status(500).json({ error: "Error al obtener descriptores" });
       } else {
-        // Si alguna de las distancias es mayor que el umbral, el rostro no es suficientemente similar
-        res.json({ existe: false });
+        const descriptores = result.map((row) => JSON.parse(row.descriptors));
+        res.json(descriptores);
       }
-    } else {
-      // Si no se encontró un rostro con el nombre y apellido proporcionados
-      res.json({ existe: false });
-    }
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error al procesar la solicitud:", error);
     res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
+app.get("/capturas", async (req, res) => {
+  try {
+    const files = await fs.readdir(path.join(__dirname, "capturas"));
+    const nombres = files.map((file) => path.parse(file).name);
+    res.json({ nombres });
+  } catch (error) {
+    console.error("Error al obtener nombres de capturas:", error);
+    res.status(500).json({ error: "Error al obtener nombres de capturas" });
   }
 });
 
