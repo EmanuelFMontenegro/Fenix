@@ -63,7 +63,9 @@ const Sidebar = ({ handleButtonClick }) => {
                   handleClick({
                     title: "Asistencia",
                     component: <Asistencia />,
+                    
                   })
+                  
                 }
               >
                 <AccessibilityNewIcon className="icon" />

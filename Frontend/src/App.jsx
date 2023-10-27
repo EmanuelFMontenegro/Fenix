@@ -4,6 +4,7 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Home from "./pages/home/Home";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+// import FaceRecognitionComponent from "./components/faceReconigtion/FaceRecognitionComponent";
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         </Routes>
       </BrowserRouter>
       <ToastContainer />
+      {/* <FaceRecognitionComponent /> */}
     </div>
   );
 };
