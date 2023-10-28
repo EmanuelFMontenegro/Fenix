@@ -1,41 +1,36 @@
-import React from 'react';
-import { Grid, Paper } from '@material-ui/core';
-import '../styles/Empleados.css'
-
+import React, { useState, useEffect } from 'react';
+import EmpleadoCard from './EmpleadoCard'; 
 const Empleados = () => {
+  const [empleados, setEmpleados] = useState([]);
+
+  // Suponiendo que hay una función fetchData que obtiene los empleados
+  const fetchData = async () => {
+    // Llamar a la API o servicio para obtener los datos de los empleados
+    try {
+      const data = await fetch('URL_DEL_ENDPOINT_PARA_OBTENER_EMPLEADOS');
+      const empleadosData = await data.json();
+      setEmpleados(empleadosData); // Actualizar el estado con los datos obtenidos
+    } catch (error) {
+      console.error('Error al obtener los empleados:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData(); // Llamar a fetchData al cargar el componente o cuando cambie alguna dependencia
+  }, []); // El segundo parámetro vacío garantiza que se ejecute solo una vez
+
   return (
-    <div className="empleados"> 
+    <div className="empleados">
       <h1>Empleados</h1>
-      <div className="grid-container"> 
-        <Grid container spacing={3}>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 1</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 2</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 3</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 4</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 5</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 6</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 7</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 8</Paper>
-          </Grid>
-          <Grid item xs={4} className="grid-item"> 
-            <Paper style={{ padding: 20, textAlign: 'center' }}>Item 9</Paper>
-          </Grid>
-        </Grid>
+      <div className="grid-container">
+        {empleados.map((empleado, index) => (
+          <EmpleadoCard
+            key={index}
+            nombre={empleado.nombre}
+            foto={empleado.foto}
+            informacionAdicional={empleado.informacionAdicional}
+          />
+        ))}
       </div>
     </div>
   );

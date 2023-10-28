@@ -73,14 +73,6 @@ const Sidebar = ({ handleButtonClick }) => {
             </Link>
           </li>
           <li>
-            <Link to="/Areas" className="nav-link">
-              <div className="nav-button">
-                <LocationOnIcon className="icon" />
-                <span>Areas</span>
-              </div>
-            </Link>
-          </li>
-          <li>
             <Link to="/" className="nav-link">
               <div className="nav-button">
                 <SettingsIcon className="icon" />

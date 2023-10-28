@@ -1,34 +1,24 @@
-/* Empleados.css */
-.empleados {
-    display: flex;
-    flex-direction: column;
-    width: calc(100% - 250px); /* Ancho del componente menos el ancho del Sidebar */
-    margin-left: 250px; /* Mismo margen que tiene Sidebar a la izquierda */
-    padding: 20px;
-  }
-  
-  .empleados h1 {
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .empleados .grid-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-  }
-  
-  .empleados .grid-item {
-    margin: 10px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-  }
-  
-  /* Agrega estilos adicionales según sea necesario */
-  
+.panel-control {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+  background-color: black;
+  grid-template-areas: "sidebar content";
+}
+
+.center {
+  grid-area: content;
+  display: grid; /* Cambiar de flex a grid */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Ancho dinámico de las columnas */
+  gap: 10px;
+  padding: 20px;
+}
+
+.paper {
+  background-color: #fff;
+  padding: 20px;
+  text-align: center;
+  width: 100%; /* Ajustar el ancho al 100% del contenedor */
+  margin-bottom: 10px;
+}
