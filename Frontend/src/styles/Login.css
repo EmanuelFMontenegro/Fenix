@@ -1,82 +1,61 @@
-/* Estilos CSS personalizados */
+/* Estilos para la página de inicio de sesión */
+
 .bg-custom {
-    background-color: #690303;
-    padding: 20px;
-  }
-  
-  .btn-custom {
-    background-color: #690303;
-    padding: 10px 20px;
-    margin: 10px;
-    color: #fff;
-    border: none;
-  }
-  .btn-custom:hover {
-    background-color: #860808; /* Cambia a un color diferente al fondo al pasar el mouse */
-    color: #fff; /* Cambia el color del texto del botón en hover */
-  }
-  
-  /* Agrega estos estilos para centrar verticalmente */
-  .d-flex-center {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; /* Centra verticalmente en toda la altura de la pantalla */
-  }
+  background-color: #520606;
+  padding: 20px;
+}
+
+.btn-custom {
+  background-color: #520606;
+  padding: 10px 20px;
+  margin: 10px;
+  color: #fff;
+  border: none;
+}
+
+.btn-custom:hover {
+  background-color: #860808;
+  color: #fff;
+}
+
+.d-flex-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
 
 
-  
-  .modal {
-    z-index: 1000; /* Puedes ajustar este valor según tus necesidades */
+/* Estilos para los Toasts de error de inicio de sesión */
+.toast-error {
+  background-color: #ff0033; 
+  color: #fff; 
+  border-radius: 5px; 
+  margin-top: 20px; 
+  padding: 10px 20px; 
+  max-width: 300px; 
+  text-align: center; 
+}
+
+/* Animación para el Toast de error */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
   }
-  
-/* Estilos para los modales de React Bootstrap */
-.modal-content {
-    background-color: #860808; /* Color de fondo del modal */
-    border: none; /* Borde del modal */
-    border-radius: 5px; /* Bordes redondeados del modal */
-    box-shadow: 0px 0px 10px rgba(216, 3, 3, 0.973); /* Sombra del modal */
-    color: #fff; /* Color del texto en el modal */
+  to {
+    transform: translateY(0);
   }
-  
-  .modal-header {
-    background-color: #e75804; /* Color de fondo del encabezado del modal */
-    color: #fff; /* Color del texto en el encabezado del modal */
-    border: none; /* Borde del encabezado del modal */
-  }
-  
-  .modal-body {
-   background-color: #860808; /* Estilos para el cuerpo del modal, si es necesario */
-  }
-  
-  .modal-footer {
-    background-color: #e75804; /* Color de fondo del pie del modal */
-    color: #fff; /* Color del texto en el pie del modal */
-    border: none; /* Borde del pie del modal */
-  }
-  
-  /* Estilos para el botón de cierre (close button) en el encabezado del modal */
-  .close {
-    color: #ff0303; /* Color del botón de cierre */
-  }
-  
-  /* Estilos para el fondo oscurecido detrás del modal (modal backdrop) */
-  .modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5); /* Color y opacidad del fondo oscurecido */
-  }
-  
+}
+
+.toast-error.show {
+  animation: slideDown 0.5s ease-in-out forwards;
+}
 
 
-
-
-
-
-
-  /* Media query para dispositivos con ancho menor o igual a 768px */
-  @media (max-width: 768px) {
-    .bg-custom {
-      padding: 10px; /* Reduce el espacio alrededor del formulario en dispositivos más pequeños */
-    }
+/* Media query para dispositivos con ancho menor o igual a 768px */
+@media (max-width: 768px) {
+  .bg-custom {
+    padding: 10px;
   }
-  
+}

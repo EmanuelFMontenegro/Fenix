@@ -4,30 +4,33 @@
   justify-content: center;
   align-items: center;
   height: 100vh; /* 100% de la altura de la ventana */
-  background-color: #7c6868; /* Cambia el color de fondo si lo deseas */
+  background-color: #7c6868; 
 }
 
 /* Estilos para el formulario */
 .login-form {
-  background-color: #0b3c5d; /* Color de fondo del formulario */
+  background-color: #690303; /* Color de fondo del formulario */
   padding: 20px;
-  max-width: 400px; /* Ancho máximo del formulario */
-  width: 90%; /* Ancho del formulario para pantallas pequeñas */
-  border-radius: 5px; /* Bordes redondeados */
-  box-shadow: 0px 0px 10px #00CFEB; /* Sombra */
+  max-width: 400px; 
+  width: 90%;
+  border-radius: 5px; 
+  box-shadow: 0px 0px 10px #e75804;
+}
+.login-link {
+  background-color: #520606;
 }
 
 /* Estilos para el encabezado del formulario */
 .login-form h2 {
   margin-bottom: 20px;
   text-align: center;
-  color: #fff; /* Cambia el color del texto a blanco */
+  color: #fff; 
 }
 
 /* Estilos para las etiquetas del formulario */
 .login-form label {
   font-weight: bold;
-  color: #fff; /* Cambia el color del texto a blanco */
+  color: #fff; 
 }
 
 /* Estilos para los campos de entrada */
@@ -35,7 +38,7 @@
   width: 100%;
   padding: 10px;
   margin-bottom: 15px;
-  border: 1px solid #ccc; /* Borde del campo de entrada */
+  border: 1px solid #ccc; 
   border-radius: 3px;
 }
 
@@ -43,47 +46,47 @@
 
 /* Estilos para el botón al pasar el mouse (hover) */
 .btn-custom:hover {
-  background-color: #860808; /* Nuevo color al pasar el mouse */
+  background-color: #860808;
 }
 
 
 /* Estilos para los enlaces */
 a {
   text-decoration: none; /* Eliminar subrayado de enlaces */
-  color: inherit; /* Heredar el color del texto del elemento padre */
+  color: inherit; 
 }
 
 /* Estilos para el enlace de "Recuperar Contraseña" */
 .login-form a {
-  color: #fff; /* Color del enlace dentro del formulario */
-  margin-top: 10px; /* Espacio superior para separarlo del botón */
-  display: block; /* Hacer que ocupe todo el ancho disponible */
-  text-align: center; /* Centrar el texto */
-  background-color: #690303; /* Color de fondo del enlace */
-  padding: 10px 0; /* Espaciado interno del enlace */
-  border-radius: 3px; /* Bordes redondeados */
+  color: #fff; 
+  margin-top: 10px; 
+  display: block; 
+  text-align: center; 
+  background-color: #520606; 
+  padding: 10px 0; 
+  border-radius: 3px; 
 }
 
-/* Estilos para el enlace de "Recuperar Contraseña" al pasar el mouse (hover) */
+/* Estilos para el enlace de "Recuperar Contraseña"(hover) */
 .login-form a:hover  {
-  background-color: #860808; /* Nuevo color al pasar el mouse */
-  color: #fff; /* Color del texto al pasar el mouse */
+  background-color: #860808;
+  color: #fff; 
 }
 .login-form a:focus{
-  background-color: #860808; /* Nuevo color al pasar el mouse */
-  color: #fff; /* Color del texto al pasar el mouse */
+  background-color: #860808; 
+  color: #fff; 
 }
 .login-form span.login-text {
-  color: #fff; /* Color del texto del span */
-  display: block; /* Hacer que ocupe todo el ancho disponible */
-  text-align: center; /* Centrar el texto */
-  margin-top: 15px; /* Espacio superior para separarlo de otros elementos */
+  color: #fff; 
+  display: block; 
+  text-align: center; 
+  margin-top: 15px; 
 }
 /* Estilos para el mensaje de registro exitoso */
 .success-message {
-  color: #fff; /* Color del texto a blanco */
-  text-align: center; /* Centrar el texto */
-  margin-top: 15px; /* Espacio superior para separarlo de otros elementos */
+  color: #fff;
+  text-align: center; 
+  margin-top: 15px; 
 }
 
 .btn-custom:focus{
@@ -98,35 +101,35 @@ a {
 
 /* Estilos para los modales de React Bootstrap */
 .modal-content {
-  background-color: #860808; /* Color de fondo del modal */
-  border: none; /* Borde del modal */
-  border-radius: 5px; /* Bordes redondeados del modal */
-  box-shadow: 0px 0px 10px rgba(216, 3, 3, 0.973); /* Sombra del modal */
-  color: #fff; /* Color del texto en el modal */
+  background-color: #520606; 
+  border: none; 
+  border-radius: 5px; 
+  box-shadow: 0px 0px 10px rgba(216, 3, 3, 0.973); 
+  color: #fff; 
 }
 
 .modal-header {
-  background-color: #e75804; /* Color de fondo del encabezado del modal */
-  color: #fff; /* Color del texto en el encabezado del modal */
-  border: none; /* Borde del encabezado del modal */
+  background-color: #e75804; 
+  color: #fff; 
+  border: none; 
 }
 
 .modal-body {
- background-color: #860808; /* Estilos para el cuerpo del modal, si es necesario */
+ background-color: #520606; 
 }
 
 .modal-footer {
-  background-color: #e75804; /* Color de fondo del pie del modal */
-  color: #fff; /* Color del texto en el pie del modal */
-  border: none; /* Borde del pie del modal */
+  background-color: #e75804;
+  color: #fff; 
+  border: none; 
 }
 
 /* Estilos para el botón de cierre (close button) en el encabezado del modal */
 .close {
-  color: #ff0303; /* Color del botón de cierre */
+  color: #ff0303; 
 }
 
 /* Estilos para el fondo oscurecido detrás del modal (modal backdrop) */
 .modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5); /* Color y opacidad del fondo oscurecido */
+  background-color: rgba(0, 0, 0, 0.5); 
 }
