@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import { useNavigate } from 'react-router-dom'; 
+import '../styles/ForgotPassword.css'
 
 function ForgotPassword() {
   const [formData, setFormData] = useState({
@@ -17,7 +18,7 @@ function ForgotPassword() {
     });
   };
 
-  const navigate = useNavigate(); // Inicializa la función navigate
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +26,7 @@ function ForgotPassword() {
       if (formData.correo.trim() !== '' && formData.pass.trim() !== '') {
         const response = await axios.post('/forgot-pass', {
           correo: formData.correo,
-          pass: formData.pass, // Agregamos la nueva contraseña
+          pass: formData.pass, 
         });
 
         if (response.data.success === true) {
