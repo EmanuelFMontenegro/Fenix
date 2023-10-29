@@ -64,14 +64,14 @@ app.post('/login', async (req, res) => {
 
     if (!usuario) {
       console.log('Usuario no encontrado en la base de datos');
-      return res.status(401).json({ success: false, message: 'Nombre de usuario o contraseña incorrectos' });
+      return res.status(401).json({ success: false, message: 'Usuario no encontrado en la base de datos' });
     }
 
     const ispassValid = await bcrypt.compare(pass, usuario.pass);
 
     if (!ispassValid) {
       console.log('Contraseña incorrecta');
-      return res.status(401).json({ success: false, message: 'Nombre de usuario o contraseña incorrectos' });
+      return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
     }
 
     // Generar token JWT (Paso 6)
@@ -84,7 +84,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ success: false, message: "Error interno del servidor" });
   }
 });
-
 
 app.post('/forgot-pass', async (req, res) => {
   const { correo } = req.body;
