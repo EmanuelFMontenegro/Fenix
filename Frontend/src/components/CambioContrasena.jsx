@@ -15,7 +15,7 @@ const CambioContrasena = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/resetpass', {
+      const response = await axios.post('/resetpassword', {
         resetToken,
         newpass: pass,
       });
