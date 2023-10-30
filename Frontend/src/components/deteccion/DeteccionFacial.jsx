@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./deteccion.scss";
 
+
+
 const DeteccionFacial = () => {
   const videoRef = useRef();
   const [modelsLoaded, setModelsLoaded] = useState(true);
@@ -163,61 +165,42 @@ const DeteccionFacial = () => {
         style={{
           border: "1px solid #ccc",
           padding: "10px",
-          borderRadius: "8px",
+          borderRadius: "0px",
           boxShadow: "2px 2px 6px rgba(0, 0, 0, 0.1)",
           marginLeft: "0px",
         }}
       >
         <div className="mt-3">
-          <label
-            style={{ color: "red", fontWeight: "bold", alignItems: "center" }}
-          >
-            Nombre
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="form-control"
-              style={{
-                border: "2px solid aqua",
-                borderRadius: "4px",
-                color: "#4169e1",
-              }}
-            />
-          </label>
-          <br />
-          <label style={{ color: "red", fontWeight: "bold" }}>
-            Apellido
-            <input
-              type="text"
-              value={apellido}
-              onChange={(e) => setApellido(e.target.value)}
-              className="form-control"
-              style={{
-                border: "2px solid aqua",
-                borderRadius: "4px",
-                color: "#4169e1",
-              }}
-            />
-          </label>
+  <label className="label">
+    Nombre
+    <input
+      type="text"
+      value={nombre}
+      onChange={(e) => setNombre(e.target.value)}
+      className="form-control label-input" // aquí referencias las clases de SCSS
+    />
+  </label>
+  <br />
+  <label className="label">
+    Apellido
+    <input
+      type="text"
+      value={apellido}
+      onChange={(e) => setApellido(e.target.value)}
+      className="form-control label-input" // aquí referencias las clases de SCSS
+    />
+  </label>
+  <br />
+  <button
+    type="button"
+    className={`btn button`} // aquí referencias las clases de SCSS
+    onClick={captureImage}
+    disabled={!modelsLoaded || !nombre || !apellido}
+  >
+    REGISTRAR ROSTRO
+  </button>
+</div>
 
-          <br />
-          <button
-            type="button"
-            className={`btn btn-${buttonColor}`}
-            onClick={captureImage}
-            disabled={!modelsLoaded || !nombre || !apellido}
-            style={{
-              marginTop: "15px",
-              color: "white",
-              fontFamily: "Arial, sans-serif",
-              backgroundColor: "blue",
-              borderColor: "#4169e1",
-            }}
-          >
-            Registro Facial
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -234,5 +217,9 @@ const toastStyle = {
   boxShadow: 24,
   p: 4,
 };
+
+
+
+
 
 export default DeteccionFacial;

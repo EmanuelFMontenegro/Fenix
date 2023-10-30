@@ -1,6 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+
 .home {
   display: flex;
   height: 100vh;
+  background-color: #ffffff;
+
 
   .homeContainer {
     display: flex;
@@ -10,9 +14,19 @@
     width: calc(100% - 250px);
      
     .header {
-      color: #ff1744;
+      color: #4e4e4e;
       margin: 20px 0;
+      //Fondo negro
+
     }
+    
+    h2 {
+      font-family: 'Lato', sans-serif;
+      font-weight: 700; /* Puedes ajustar el peso según tus necesidades */
+      //Tamaño de fuente responsiva
+      font-size: calc(1rem + 1vw);
+  }
+  
 
     .body {
       display: flex;
@@ -20,6 +34,7 @@
       flex: 1;
       overflow: auto;
       align-items: center;
+      
 
       .componentArea {
         width: 100%;
