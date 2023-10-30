@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/sidebar/Sidebar";
-import Home from "./pages/home/home";
+import Home from "./pages/home/Home";
 import AdminRegistration from './components/AdminRegistration';
 import Login from './pages/login/Login';
 import ForgotPassword from './components/ForgotPassword';
@@ -12,6 +12,7 @@ import PanelDeControl from "./components/PanelDeControl";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Empleados from '../src/components/Empleados'
+import Profile from '../src/components/Profile';
 
 
 
@@ -36,6 +37,7 @@ const App = () => {
                     <Route path="/paneldecontrol" element={<PanelDeControl />} /> 
                     <Route path="/administrador" element={<Administrador />} />
                     <Route path="/Empleados" element={<Empleados />} />
+                    <Route path="/Profile" element={<Profile />} />
                   </Routes>
                 </div>
               </AuthenticationGuard>

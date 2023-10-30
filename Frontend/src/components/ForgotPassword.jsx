@@ -23,11 +23,13 @@ function ForgotPassword() {
   const navigate = useNavigate();
 
   const handleCorreoValidation = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
       const response = await axios.post('/forgot-password', {
         correo: formData.correo,
       });
+
+      console.log('Correo validation response:', response.data);
 
       if (response.data.success === true) {
         console.log('El correo proporcionado está registrado');
@@ -42,21 +44,28 @@ function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post('/forgot-password', {
-        correo: formData.correo,
-        pass: formData.pass,
-      });
+    if (correoValidado) {
+      try {
+        const response = await axios.post('/forgot-password', {
+          correo: formData.correo,
+          pass: formData.pass,
+        });
 
-      if (response.data.success === true) {
-        console.log('Contraseña cambiada con éxito');
-      } else {
-        console.error('Error al cambiar la contraseña:', response.data.message);
+        console.log('Password change response:', response.data);
+
+        if (response.data.success === true) {
+          console.log('Contraseña cambiada con éxito');
+        } else {
+          console.error('Error al cambiar la contraseña:', response.data.message);
+        }
+      } catch (error) {
+        console.error('Error al enviar los datos:', error);
       }
-    } catch (error) {
-      console.error('Error al enviar los datos:', error);
+    } else {
+      console.error('El correo electrónico no ha sido validado todavía');
     }
   };
+  
 
   return (
     <div className="forgot-pass-container">

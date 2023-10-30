@@ -72,6 +72,10 @@ async function updateUserPass(correo, pass) {
 
 async function handleForgotPasswordRequest(correo, pass) {
   try {
+    if (!correo) {
+      return { success: false, message: 'El correo no fue proporcionado' };
+    }
+
     const user = await findUserByCorreo(correo);
 
     if (!user) {
@@ -95,6 +99,7 @@ async function handleForgotPasswordRequest(correo, pass) {
     return { success: false, message: 'Error interno del servidor - Detalles: ' + error.message };
   }
 }
+
 
 
 

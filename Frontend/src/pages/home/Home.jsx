@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import DeteccionFacial from "../../components/deteccion/DeteccionFacial";
 import PanelDeControl from "../../components/PanelDeControl";
+import Profile from "../../components/Profile";
 import "../home/home.scss";
 
 const Home = () => {
@@ -24,10 +25,11 @@ const Home = () => {
         <div className="body">
           <div className="componentArea">
             <Sidebar handleButtonClick={handleButtonClick} />
+            <Profile />
             <PanelDeControl />
           </div>
         </div>
-        <div className="footer">Pie de página</div>
+        <div className="footer">Fenix Group</div>
       </div>
     </div>
   );

@@ -84,7 +84,7 @@ const Sidebar = ({ handleButtonClick }) => {
             <p className="title">Usuarios</p>
           </li>
           <li>
-            <Link to="/profile" className="nav-link">
+            <Link to="/Profile" className="nav-link">
               <div className="nav-button">
                 <AccountCircleOutlinedIcon className="icon" />
                 <span>Perfil</span>
