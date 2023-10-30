@@ -8,7 +8,7 @@ const app = express();
 const mysql = require('mysql2/promise');
 const PORT = process.env.PORT || 4000;
 
-const secretKey = 'tu-clave-secreta'; // Definimos la clave secreta
+const secretKey = 'tu-clave-secreta'; 
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,7 +42,7 @@ function requireAuth(req, res, next) {
       }
     }
 
-    // Si el token es válido, guardamos la información del usuario decodificada en req.user
+    
     req.user = decoded;
     next();
   });
@@ -93,44 +93,8 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/forgot-pass', requireAuth, async (req, res) => {
-  const { correo } = req.body;
-
-  if (!correo) {
-    return res.status(400).json({ success: false, message: 'El correo no fue proporcionado' });
-  }
-
-  const user = await findUserByCorreo(correo);
-
-  if (!user) {
-    return res.status(400).json({ success: false, message: 'El correo proporcionado no está registrado' });
-  }
-
-  res.status(200).json({ success: true, message: 'El correo proporcionado está registrado' });
-});
-
-app.post('/resetpass', requireAuth, async (req, res) => {
-  const { correo, pass } = req.body;
-
-  if (!correo || !pass) {
-    return res.status(400).json({ success: false, message: 'Correo o nueva contraseña no proporcionados' });
-  }
-
-  const user = await findUserByCorreo(correo);
-
-  if (!user) {
-    return res.status(400).json({ success: false, message: 'El correo proporcionado no está registrado' });
-  }
-
-  const hashedpass = await bcrypt.hash(pass, 10);
-  const updateSuccess = await updateUserPass(correo, hashedpass);
-
-  if (updateSuccess) {
-    res.status(200).json({ success: true, message: 'Contraseña cambiada con éxito' });
-  } else {
-    res.status(500).json({ success: false, message: 'Error al cambiar la contraseña' });
-  }
-});
+const forgotPasswordRoutes = require('./routes/forgotPasswordRoute'); 
+app.use('/forgot-password', forgotPasswordRoutes);
 
 
 app.listen(PORT, () => {

@@ -73,29 +73,31 @@ async function updateUserPass(correo, pass) {
 async function handleForgotPasswordRequest(correo, pass) {
   try {
     const user = await findUserByCorreo(correo);
-    if (user) {
-      // Verifica que se proporcionó una nueva contraseña
-      if (pass) {
-        // Actualiza la contraseña del usuario
-        const hashedpass = await bcrypt.hash(pass, 10);
-        const updateSuccess = await updateUserPass(correo, hashedpass);
 
-        if (updateSuccess) {
-          return { success: true, message: 'Contraseña cambiada con éxito' };
-        } else {
-          return { success: false, message: 'Error al cambiar la contraseña' };
-        }
-      } else {
-        return { success: false, message: 'La nueva contraseña no fue proporcionada' };
-      }
-    } else {
+    if (!user) {
       return { success: false, message: 'El correo electrónico no se encuentra registrado' };
+    }
+
+    if (!pass) {
+      return { success: false, message: 'La nueva contraseña no fue proporcionada' };
+    }
+
+    const hashedpass = await bcrypt.hash(pass, 10);
+    const updateSuccess = await updateUserPass(correo, hashedpass);
+
+    if (updateSuccess) {
+      return { success: true, message: 'Contraseña cambiada con éxito' };
+    } else {
+      return { success: false, message: 'Error al cambiar la contraseña' };
     }
   } catch (error) {
     console.error('Error al manejar la solicitud de recuperación de contraseña:', error);
-    return { success: false, message: 'Error interno del servidor' };
+    return { success: false, message: 'Error interno del servidor - Detalles: ' + error.message };
   }
 }
+
+
+
 module.exports = {
   findUserByUser,
   findUserByCorreo,

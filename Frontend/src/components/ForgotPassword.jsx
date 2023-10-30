@@ -10,7 +10,7 @@ function ForgotPassword() {
     pass: '',
   });
 
-  const [correoValido, setCorreoValido] = useState(false);
+  const [correoValidado, setCorreoValidado] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,15 +22,16 @@ function ForgotPassword() {
 
   const navigate = useNavigate();
 
-  const handleCorreoValidation = async () => {
+  const handleCorreoValidation = async (e) => {
+    e.preventDefault(); 
     try {
-      const response = await axios.post('/forgot-pass', {
+      const response = await axios.post('/forgot-password', {
         correo: formData.correo,
       });
 
       if (response.data.success === true) {
         console.log('El correo proporcionado está registrado');
-        setCorreoValido(true);
+        setCorreoValidado(true);
       } else {
         console.error('Error en la validación de correo:', response.data.message);
       }
@@ -42,7 +43,7 @@ function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/resetpass', {
+      const response = await axios.post('/forgot-password', {
         correo: formData.correo,
         pass: formData.pass,
       });
@@ -72,8 +73,8 @@ function ForgotPassword() {
             className="forgot-pass-input"
           />
         </Form.Group>
-        {!correoValido ? (
-          <Button variant="custom" type="submit" className="btn-custom" onClick={handleCorreoValidation}>
+        {!correoValidado ? (
+          <Button variant="custom" type="button" className="btn-custom" onClick={handleCorreoValidation}>
             Validar Correo
           </Button>
         ) : (
@@ -90,15 +91,17 @@ function ForgotPassword() {
               />
             </Form.Group>
             <div className="d-flex justify-content-between">
-  <Button variant="custom" type="submit" className="btn-custom" onClick={handleSubmit}>
-    Enviar
-  </Button>
-  <Button variant="custom" className="btn-custom volver" onClick={() => navigate('/Login')}>
-    Volver
-  </Button>
-</div>
+              <Button variant="custom" type="submit" className="btn-custom" onClick={handleSubmit}>
+                Enviar
+              </Button>
+            </div>
           </>
         )}
+        <div className="d-flex justify-content-end">
+          <Button variant="custom" className="btn-custom volver" onClick={() => navigate('/Login')}>
+            Volver
+          </Button>
+        </div>
       </Form>
     </div>
   );
