@@ -3,24 +3,33 @@ const pool = require('../db');
 
 async function registerAdmin(user, pass, correo) {
   try {
-    const checkQuery = 'SELECT * FROM usuarios WHERE user = ? OR correo = ?';
-    const [existingAdmin] = await pool.query(checkQuery, [user, correo]);
+    const existingUserQuery = 'SELECT * FROM usuarios WHERE user = ?';
+    const existingCorreoQuery = 'SELECT * FROM usuarios WHERE correo = ?';
 
-    if (existingAdmin.length > 0) {
-      return { success: false, message: 'Nombre de usuario o correo electrónico ya registrados' };
+    const [existingUser] = await pool.query(existingUserQuery, [user]);
+    const [existingCorreo] = await pool.query(existingCorreoQuery, [correo]);
+    console.log('Existing User:', existingUser);
+    console.log('Existing Correo:', existingCorreo);
+
+    if (existingUser.length > 0) {
+      return { success: false, message: 'Usuario Existente' };
+    } else if (existingCorreo.length > 0) {
+      return { success: false, message: 'Correo Existente' };
+    } else {
+      const hashedpass = await bcrypt.hash(pass, 10);
+      const rol_id = 1;
+      const insertQuery = 'INSERT INTO usuarios (user, pass, correo, rol_id) VALUES (?, ?, ?, ?)';
+      await pool.query(insertQuery, [user, hashedpass, correo, rol_id]);
+
+      return { success: true, message: 'Registro exitoso' };
     }
-
-    const hashedpass = await bcrypt.hash(pass, 10);
-    const rol_id = 1;
-    const insertQuery = 'INSERT INTO usuarios (user, pass, correo, rol_id) VALUES (?, ?, ?, ?)';
-    await pool.query(insertQuery, [user, hashedpass, correo, rol_id]);
-
-    return { success: true, message: 'Registro exitoso' };
   } catch (error) {
     console.error('Error en el registro:', error);
     throw error;
   }
 }
+
+
 async function findUserByUser(user) {
   try {
     const [rows] = await pool.query('SELECT * FROM usuarios WHERE user = ?', [user]);
