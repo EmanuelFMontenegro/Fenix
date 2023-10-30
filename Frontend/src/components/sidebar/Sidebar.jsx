@@ -1,4 +1,3 @@
-import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import "./sidebar.scss";
 import {
@@ -14,6 +13,7 @@ import {
 import DeteccionFacial from "../deteccion/DeteccionFacial";
 import Asistencia from "../asistencia/Asistencia";
 import logoImage from "../../assets/Fenix.jpg";
+import PanelDeControl from "../PanelDeControl";
 
 const Sidebar = ({ handleButtonClick }) => {
   const handleClick = (component) => {
@@ -22,8 +22,9 @@ const Sidebar = ({ handleButtonClick }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken"); // Elimina el token de autenticación.
-    window.location.href = "/login"; // Asegúrate de que "/login" sea la ruta correcta.
+    window.location.href = "/login"; 
   }; 
+
   return (
     <div className="sidebar">
       <div className="top">
@@ -33,93 +34,76 @@ const Sidebar = ({ handleButtonClick }) => {
       <hr className="divider" />
       <div className="center">
         <ul>
-          <p className="title">Inicio</p>
           <li>
-            <button className="nav-button">
-              <DashboardIcon className="icon" />
-              <span className="text">Panel de Control</span>
-            </button>
+            <p className="title">Inicio</p>
           </li>
-          <p className="title">Navegacion Fenix</p>
-
-          <Link to="/DeteccionFacial" className="nav-link">
-            <li>
-              <div
-                className="nav-button"
-                onClick={() =>
-                  handleClick({
-                    title: "Detección Facial",
-                    component: <DeteccionFacial />,
-                  })
-                }
-              >
+          <li>
+             <Link to="/paneldecontrol" className="nav-link">
+               <div className="nav-button" >
+                 <DashboardIcon className="icon" />
+                 <span className="text">Panel de Control</span>
+               </div>
+             </Link>
+           </li>
+          <li>
+            <p className="title">Navegacion Fenix</p>
+          </li>
+          <li>
+            <Link to="/DeteccionFacial" className="nav-link">
+              <div className="nav-button" onClick={() => handleClick({ title: "Detección Facial", component: <DeteccionFacial /> })}>
                 <FaceIcon className="icon" />
-                <span>Deteccion Facial</span>
+                <span>Detección Facial</span>
               </div>
-            </li>
-          </Link>
-
-          <Link to="/Asistencia" className="nav-link">
-            <li>
-              <div
-                className="nav-button"
-                onClick={() =>
-                  handleClick({
-                    title: "Asistencia",
-                    component: <Asistencia />,
-                  })
-                }
-              >
+            </Link>
+          </li>
+          <li>
+            <Link to="/Asistencia" className="nav-link">
+              <div className="nav-button" onClick={() => handleClick({ title: "Asistencia", component: <Asistencia /> })}>
                 <AccessibilityNewIcon className="icon" />
                 <span>Asistencias</span>
               </div>
-            </li>
-          </Link>
-          <Link to="../Empleados.jsx" className="nav-link">
-            <li>
-              <button className="nav-button">
+            </Link>
+          </li>
+          <li>
+            <Link to="/Empleados" className="nav-link">
+              <div className="nav-button">
                 <CreditCardIcon className="icon" />
                 <span>Empleados</span>
-              </button>
-            </li>
-          </Link>
-          <Link to="../Areas.jsx" className="nav-link">
-            <li>
-              <button className="nav-button">
-                <LocationOnIcon className="icon" />
-                <span>Areas</span>
-              </button>
-            </li>
-          </Link>
-          <Link to="../" className="nav-link">
-            <li>
-              <button className="nav-button">
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link to="/" className="nav-link">
+              <div className="nav-button">
                 <SettingsIcon className="icon" />
                 <span>Administrador</span>
-              </button>
-            </li>
-          </Link>
-          <p className="title">Usuarios</p>
-          <Link to="/profile" className="nav-link">
-            <li>
-              <button className="nav-button">
+              </div>
+            </Link>
+          </li>
+          <li>
+            <p className="title">Usuarios</p>
+          </li>
+          <li>
+            <Link to="/profile" className="nav-link">
+              <div className="nav-button">
                 <AccountCircleOutlinedIcon className="icon" />
                 <span>Perfil</span>
-              </button>
-            </li>
-          </Link>
-          <Link to="/logout" className="nav-link">
-            <li>
-            <button className="nav-button" onClick={handleLogout}>
-              <ExitToAppIcon className="icon" />
-              <span>Salir</span>
-            </button>
-            </li>
-          </Link>
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link to="/logout" className="nav-link">
+              <div className="nav-button" onClick={handleLogout}>
+                <ExitToAppIcon className="icon" />
+                <span>Salir</span>
+              </div>
+            </Link>
+          </li>
         </ul>
       </div>
     </div>
   );
-};
+};  
+
 
 export default Sidebar;

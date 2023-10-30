@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { Form, Button, Modal } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import ErrorModal from './ErrorModal';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../styles/AdminRegistration.css';
 
 function AdminRegistration() {
   const [formData, setFormData] = useState({
-    user: '',    // Cambiado de "username" a "user"
-    pass: '',    // Cambiado de "password" a "pass"
-    correo: '',  // Cambiado de "email" a "correo"
+    user: '',
+    pass: '',
+    correo: '',
   });
 
   const [validationErrors, setValidationErrors] = useState([]);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -24,59 +24,41 @@ function AdminRegistration() {
     });
   };
 
-  const handleCloseErrorModal = () => {
-    setShowErrorModal(false);
-  };
-
-  const handleRegistrationSuccessClose = () => {
-    setRegistrationSuccess(false);
-    navigate('/Login');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setValidationErrors([]);
-    // console.log('Datos del formulario:', formData);
-
+    
     try {
-      if (
-        formData.user.trim() !== '' &&
-        formData.pass.trim() !== '' &&
-        formData.correo.trim() !== ''
-      ) {
+      if (formData.user.trim() !== '' && formData.pass.trim() !== '' && formData.correo.trim() !== '') {
         const response = await axios.post('http://localhost:4000/signup', formData);
-
+    
         if (response.data.success) {
-          setRegistrationSuccess(true);
-
-          setTimeout(() => {
-            navigate('/Login');
-          }, 2000);
-        } else {
-          if (response.data.message === 'El correo electrónico ya está en uso') {
-            alert('El correo electrónico ya está en uso. Por favor, ingrese otro correo.');
-          } else {
-            setShowErrorModal(true);
-            setValidationErrors(response.data.errors || []);
-          }
+          toast.success('Registro exitoso. Redirigiendo...', { autoClose: 1000, onClose: () => navigate('/Login') });
         }
       } else {
         console.error('Por favor, complete todos los campos.');
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        setShowErrorModal(true);
-        setValidationErrors(error.response.data.errors || []);
+        if (error.response.data.message === 'CorreoExistente') {
+          toast.error('El correo electrónico ya está en uso. Por favor, ingrese otro correo.');
+        } else if (error.response.data.message === 'UsuarioExistente') {
+          toast.error('El usuario ya está registrado. Por favor, elija otro nombre de usuario.');
+        } else {
+          toast.error('Nombre de usuario y correo electrónico ya registrados. Por favor, ingrese datos diferentes.');
+        }
       } else {
         console.error('Error al registrar el administrador:', error.message);
+        toast.error('Error al registrar el administrador.');
       }
     }
-  };
+  } 
 
-  const navigate = useNavigate();
-
+  
   return (
     <div className="login-container">
+      <ToastContainer />
+
       <Form className="login-form" onSubmit={handleSubmit}>
         <h2 className="mb-4">Registro de Administrador</h2>
         <Form.Group controlId="username">
@@ -125,19 +107,6 @@ function AdminRegistration() {
           </Button>
         </div>
       </Form>
-
-      <Modal show={registrationSuccess} onHide={handleRegistrationSuccessClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Registro Exitoso</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Registro exitoso. Redirigiendo...</Modal.Body>
-      </Modal>
-
-      <ErrorModal
-        show={showErrorModal}
-        handleClose={handleCloseErrorModal}
-        errorMessage="El nombre de usuario o el email ya están en uso"
-      />
     </div>
   );
 }

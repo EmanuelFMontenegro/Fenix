@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Form, Button, Modal } from 'react-bootstrap';
+import { Form, Button,  } from 'react-bootstrap';
 import "../../styles/Login.css";
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 function Login() {
-  const [showUserIncorrectModal, setShowUserIncorrectModal] = useState(false);
-  const [showPassIncorrectModal, setShowPassIncorrectModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
 
   const [formData, setFormData] = useState({
     user: '',
@@ -29,38 +30,32 @@ function Login() {
   console.log('Credenciales de inicio de sesión:', formData);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (formData.user.trim() !== '' && formData.pass.trim() !== '') {
-        const userData = {
-          user: formData.user,
-          pass: formData.pass,
-        };
-  
-        const response = await axios.post('http://localhost:4000/login', userData);
-        console.log('response.data.success:', response.data.success);
-        console.log('response.data.message:', response.data.message);
-        
-        if (response.data.success === true) {
-          // Almacena el token de autenticación en localStorage
-          localStorage.setItem('authToken', response.data.token);
-          console.log('Mostrar modal de éxito');
-          navigate('/Sidebar'); // Redirige al usuario a la página protegida
-        } else if (response.data.message === 'Nombre de usuario incorrecto') {
-          console.log('Mostrar modal de usuario incorrecto');
-          setShowUserIncorrectModal(true);
-        } else {
-          console.log('Mostrar modal de contraseña incorrecta');
-          setShowPassIncorrectModal(true);
-        }
+  e.preventDefault();
+  try {
+    if (formData.user.trim() !== '' && formData.pass.trim() !== '') {
+      const userData = {
+        user: formData.user,
+        pass: formData.pass,
+      };
+
+      const response = await axios.post('http://localhost:4000/login', userData);
+      console.log('response.data.success:', response.data.success);
+
+      if (response.data.success === true) {
+        localStorage.setItem('authToken', response.data.token);
+        toast.success('Inicio de sesión exitoso');
+        navigate('/Sidebar');
       }
-    } catch (error) {
-      console.error('Error al enviar los datos:', error);
     }
-  }
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      if (error.response.data.message === 'Usuario no encontrado en la base de datos') {
+        toast.error('Nombre de usuario incorrecto', { className: 'toast-error show' });
+      } else if (error.response.data.message === 'Contraseña incorrecta') {
+        toast.error('Contraseña incorrecta', { className: 'toast-error show' });
+      } 
+  }}};
   
-  
- 
 
   return (
     <div className="login-container">
@@ -102,43 +97,9 @@ function Login() {
         </div>
       </Form>
       
-      <Modal show={showUserIncorrectModal} onHide={() => {setShowUserIncorrectModal(false);}}>
-        <Modal.Header closeButton>
-          <Modal.Title>Usuario incorrecto</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>El nombre de usuario es incorrecto. Por favor, inténtalo de nuevo.</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowUserIncorrectModal(false)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <Modal show={showPassIncorrectModal} onHide={() => setShowPassIncorrectModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Contraseña incorrecta</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>La contraseña es incorrecta. Por favor, inténtalo de nuevo.</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPassIncorrectModal(false)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)}>
-        <Modal.Header closeButton>
-        <Modal.Title>Bienvenido/a</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Accediendo a Fenix</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowUserIncorrectModal(false)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-   
+      <ToastContainer />
     </div>
   );
-}
-
+};
+  
 export default Login;

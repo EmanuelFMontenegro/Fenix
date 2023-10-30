@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import DeteccionFacial from "../../components/deteccion/DeteccionFacial";
+import PanelDeControl from "../../components/PanelDeControl";
 import "../home/home.scss";
 
 const Home = () => {
@@ -12,7 +13,6 @@ const Home = () => {
 
   return (
     <div className="home">
-      <Sidebar handleButtonClick={handleButtonClick} />
       <div className="homeContainer">
         <div className="header">
           <h2>
@@ -23,7 +23,8 @@ const Home = () => {
         </div>
         <div className="body">
           <div className="componentArea">
-            {componentToRender && componentToRender.component}
+            <Sidebar handleButtonClick={handleButtonClick} />
+            <PanelDeControl />
           </div>
         </div>
         <div className="footer">Pie de página</div>
