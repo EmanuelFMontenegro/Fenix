@@ -19,42 +19,42 @@ function Login() {
 
   const navigate = useNavigate();
 
-  // Función para manejar cambios en los campos de entrada
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-  console.log('Credenciales de inicio de sesión:', formData);
+ // Función para manejar cambios en los campos de entrada
+ const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setFormData({
+    ...formData,
+    [name]: value,
+  });
+};
+console.log('Credenciales de inicio de sesión:', formData);
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    if (formData.user.trim() !== '' && formData.pass.trim() !== '') {
-      const userData = {
-        user: formData.user,
-        pass: formData.pass,
-      };
+const handleSubmit = async (e) => {
+e.preventDefault();
+try {
+  if (formData.user.trim() !== '' && formData.pass.trim() !== '') {
+    const userData = {
+      user: formData.user,
+      pass: formData.pass,
+    };
 
-      const response = await axios.post('http://localhost:4000/login', userData);
-      console.log('response.data.success:', response.data.success);
+    const response = await axios.post('http://localhost:4000/login', userData);
+    console.log('response.data.success:', response.data.success);
 
-      if (response.data.success === true) {
-        localStorage.setItem('authToken', response.data.token);
-        toast.success('Inicio de sesión exitoso');
-        navigate('/Sidebar');
-      }
+    if (response.data.success === true) {
+      localStorage.setItem('authToken', response.data.token);
+      toast.success('Inicio de sesión exitoso');
+      navigate('/Sidebar');
     }
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      if (error.response.data.message === 'Usuario no encontrado en la base de datos') {
-        toast.error('Nombre de usuario incorrecto', { className: 'toast-error show' });
-      } else if (error.response.data.message === 'Contraseña incorrecta') {
-        toast.error('Contraseña incorrecta', { className: 'toast-error show' });
-      } 
-  }}};
+  }
+} catch (error) {
+  if (error.response && error.response.status === 401) {
+    if (error.response.data.message === 'Usuario no encontrado en la base de datos') {
+      toast.error('Nombre de usuario incorrecto', { className: 'toast-error show' });
+    } else if (error.response.data.message === 'Contraseña incorrecta') {
+      toast.error('Contraseña incorrecta', { className: 'toast-error show' });
+      } 
+  }}};
   
 
   return (

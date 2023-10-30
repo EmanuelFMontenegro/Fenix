@@ -12,6 +12,7 @@ import PanelDeControl from "./components/PanelDeControl";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Empleados from '../src/components/Empleados'
+import Profile from "./components/Profile";
 
 
 
@@ -36,6 +37,7 @@ const App = () => {
                     <Route path="/paneldecontrol" element={<PanelDeControl />} /> 
                     <Route path="/administrador" element={<Administrador />} />
                     <Route path="/Empleados" element={<Empleados />} />
+                    <Route path="/Profile" element={<Profile />} />
                   </Routes>
                 </div>
               </AuthenticationGuard>
