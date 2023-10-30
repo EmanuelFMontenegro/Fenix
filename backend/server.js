@@ -26,18 +26,26 @@ app.use(cors(corsOptions));
 // Middleware de autenticación para verificar el token (Paso 3)
 function requireAuth(req, res, next) {
   const token = req.headers['authorization'];
+
   if (!token) {
-    return res.status(401).json({ success: false, message: 'Acceso no autorizado' });
-  } else {
-    jwt.verify(token, secretKey, (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ success: false, message: 'Acceso no autorizado' });
-      } else {
-        req.user = decoded;
-        next();
-      }
-    });
+    return res.status(401).json({ success: false, message: 'Se requiere un token de autenticación' });
   }
+
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ success: false, message: 'El token ha expirado' });
+      } else if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({ success: false, message: 'Token inválido' });
+      } else {
+        return res.status(401).json({ success: false, message: 'Acceso no autorizado' });
+      }
+    }
+
+    // Si el token es válido, guardamos la información del usuario decodificada en req.user
+    req.user = decoded;
+    next();
+  });
 }
 
 // Ruta de registro (Paso 4)
@@ -85,7 +93,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/forgot-pass', async (req, res) => {
+app.post('/forgot-pass', requireAuth, async (req, res) => {
   const { correo } = req.body;
 
   if (!correo) {
@@ -98,15 +106,11 @@ app.post('/forgot-pass', async (req, res) => {
     return res.status(400).json({ success: false, message: 'El correo proporcionado no está registrado' });
   }
 
-  // Definir 'pass' aquí o de donde corresponda
-  const pass = 'nueva_contraseña';  // Cambia 'nueva_contraseña' por la contraseña deseada
-
-  const response = await handleForgotPasswordRequest(correo, pass);
-  res.status(response.success ? 200 : 400).json(response);
+  res.status(200).json({ success: true, message: 'El correo proporcionado está registrado' });
 });
 
-app.post('/resetpass', async (req, res) => {
-  const { correo, pass } = req.body; // Definir 'pass' aquí
+app.post('/resetpass', requireAuth, async (req, res) => {
+  const { correo, pass } = req.body;
 
   if (!correo || !pass) {
     return res.status(400).json({ success: false, message: 'Correo o nueva contraseña no proporcionados' });
@@ -127,6 +131,8 @@ app.post('/resetpass', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al cambiar la contraseña' });
   }
 });
+
+
 app.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
