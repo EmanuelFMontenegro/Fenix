@@ -15,10 +15,20 @@ const DeteccionFacial = () => {
   const [buttonColor, setButtonColor] = useState("primary");
   const [isRegistrado, setIsRegistrado] = useState(false);
   const [error, setError] = useState(null);
+  const [inputError, setInputError] = useState({
+    nombre: false,
+    apellido: false,
+  });
 
-  const handleModalClose = () => {
-    setNombre("");
-    setApellido("");
+  const handleInput = (e, field) => {
+    const value = e.target.value;
+    if (/^[a-zA-Z\s]*$/.test(value) || value === "") {
+      if (field === "nombre") setNombre(value);
+      else setApellido(value);
+      setInputError((prevState) => ({ ...prevState, [field]: false }));
+    } else {
+      setInputError((prevState) => ({ ...prevState, [field]: true }));
+    }
   };
 
   useEffect(() => {
@@ -83,51 +93,69 @@ const DeteccionFacial = () => {
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const capturedImageData = canvas.toDataURL("image/jpeg", 0.6);
 
-      if (capturedImageData.startsWith("data:image/jpeg;base64,")) {
-        const detections = await faceapi
-          .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceDescriptors()
-          .withAgeAndGender()
-          .withFaceExpressions();
+      if (!capturedImageData.startsWith("data:image/jpeg;base64,")) {
+        toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
+        return;
+      }
 
-        if (detections.length === 1) {
-          try {
-            const response = await axios.get(
-              `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
-            );
+      const detections = await faceapi
+        .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptors()
+        .withAgeAndGender()
+        .withFaceExpressions();
 
-            if (response.data.existe) {
-              setIsRegistrado(true);
-              showRegistroExistenteToast();
-              return;
-            } else {
-              const descriptor1 = detections[0].descriptor;
+      if (detections.length === 0) {
+        toast.warning("Rostro no detectado. ¡Por favor regístrate!");
+      } else if (detections.length === 1) {
+        try {
+          const descriptor1 = detections[0].descriptor;
 
-              const registroResponse = await axios.post(
-                "http://localhost:4000/detect",
-                {
-                  nombre,
-                  apellido,
-                  imageBlob: capturedImageData,
-                  descriptors: descriptor1, // Se guarda el descriptor completo
-                }
-              );
-
-              setButtonColor("success");
-              toast.success("¡Empleado registrado Gracias!");
+          const responseDescriptor = await axios.get(
+            "http://localhost:4000/obtenerDescriptores",
+            {
+              descriptor: descriptor1,
             }
-          } catch (error) {
-            // ... (manejar errores)
+          );
+
+          if (responseDescriptor.data.existe) {
+            toast.warning("Este rostro ya está registrado.");
+            return;
           }
-        } else {
-          toast.error("No se detectó ningún rostro. Inténtalo de nuevo.");
+
+          const responseNombre = await axios.get(
+            `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
+          );
+
+          if (responseNombre.data.existe) {
+            toast.warning("Ya existe un empleado con este nombre y apellido.");
+            return;
+          }
+
+          // Procede a registrar si el rostro y el nombre son únicos
+          const registroResponse = await axios.post(
+            "http://localhost:4000/detect",
+            {
+              nombre,
+              apellido,
+              imageBlob: capturedImageData,
+              descriptors: descriptor1,
+            }
+          );
+
+          toast.success("¡Empleado registrado exitosamente!");
+        } catch (error) {
+          console.error("Error en la solicitud de registro:", error);
+          toast.error(
+            "Estas intentando registrar el mismo empleado pero con distinto nombre/apellido."
+          );
         }
       } else {
-        toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
+        toast.warning("Detectados múltiples rostros. Inténtalo de nuevo.");
       }
     } catch (error) {
-      // ... (manejar errores)
+      console.error("Error al capturar la imagen:", error);
+      toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
     }
   };
 
@@ -176,10 +204,10 @@ const DeteccionFacial = () => {
             <input
               type="text"
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              onChange={(e) => handleInput(e, "nombre")}
               className="form-control"
               style={{
-                border: "2px solid aqua",
+                border: inputError.nombre ? "2px solid red" : "2px solid aqua",
                 borderRadius: "4px",
                 color: "#4169e1",
               }}
@@ -191,16 +219,17 @@ const DeteccionFacial = () => {
             <input
               type="text"
               value={apellido}
-              onChange={(e) => setApellido(e.target.value)}
+              onChange={(e) => handleInput(e, "apellido")}
               className="form-control"
               style={{
-                border: "2px solid aqua",
+                border: inputError.apellido
+                  ? "2px solid red"
+                  : "2px solid aqua",
                 borderRadius: "4px",
                 color: "#4169e1",
               }}
             />
           </label>
-
           <br />
           <button
             type="button"

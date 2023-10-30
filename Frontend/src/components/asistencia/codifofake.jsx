@@ -124,6 +124,18 @@
 //         setApellidoDetectado(response.data.apellido);
 //         setTipoRegistro("Entrada");
 //         setMostrarToast(false);
+
+//         // Enviar datos a la tabla de asistencia
+//         const responseAsistencia = await axios.post(
+//           `http://localhost:4000/registrarAsistencia`,
+//           {
+//             nombre: response.data.nombre,
+//             apellido: response.data.apellido,
+//             tipoRegistro: "Entrada",
+//           }
+//         );
+
+//         console.log("Registro de asistencia exitoso:", responseAsistencia.data);
 //       }
 //     } catch (error) {
 //       console.error("Error al registrar entrada:", error);
@@ -189,34 +201,22 @@
 //         setApellidoDetectado(response.data.apellido);
 //         setTipoRegistro("Salida");
 //         setMostrarToast(false);
+
+//         // Enviar datos a la tabla de asistencia
+//         const responseAsistencia = await axios.post(
+//           `http://localhost:4000/registrarAsistencia`,
+//           {
+//             nombre: response.data.nombre,
+//             apellido: response.data.apellido,
+//             tipoRegistro: "Salida",
+//           }
+//         );
+
+//         console.log("Registro de asistencia exitoso:", responseAsistencia.data);
 //       }
 //     } catch (error) {
 //       console.error("Error al registrar salida:", error);
 //       toast.error("Error al registrar salida");
-//     }
-//   };
-
-//   const handleRegistrar = async () => {
-//     try {
-//       if (!nombreDetectado || !apellidoDetectado || !tipoRegistro) {
-//         toast.warning("Por favor, espera a que se detecte tu rostro.");
-//         return;
-//       }
-
-//       const response = await axios.post(`http://localhost:4000/registrar`, {
-//         nombre: nombreDetectado,
-//         apellido: apellidoDetectado,
-//         tipoRegistro,
-//       });
-
-//       if (response.data.success) {
-//         toast.success(`${tipoRegistro} registrada correctamente`);
-//       } else {
-//         toast.error(`Error al registrar ${tipoRegistro}`);
-//       }
-//     } catch (error) {
-//       console.error(`Error al enviar la solicitud de ${tipoRegistro}:`, error);
-//       toast.error(`Error al registrar ${tipoRegistro}`);
 //     }
 //   };
 
@@ -229,7 +229,7 @@
 //         height={480}
 //         style={{
 //           position: "absolute",
-//           top: "78px",
+//           top: "88px",
 //           left: "267px",
 //           pointerEvents: "none",
 //           color: "#00ffff",
@@ -257,7 +257,11 @@
 //             <Button
 //               variant="contained"
 //               color="primary"
-//               onClick={handleRegistrar}
+//               onClick={
+//                 tipoRegistro === "Entrada"
+//                   ? handleEntradaClick
+//                   : handleSalidaClick
+//               }
 //               style={{ margin: "0.5em" }}
 //             >
 //               Confirmar
