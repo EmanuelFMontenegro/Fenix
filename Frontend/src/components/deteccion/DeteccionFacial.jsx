@@ -107,55 +107,55 @@ const DeteccionFacial = () => {
 
       if (detections.length === 0) {
         toast.warning("Rostro no detectado. ¡Por favor regístrate!");
-      } else if (detections.length === 1) {
-        try {
-          const descriptor1 = detections[0].descriptor;
+        return;
+      }
 
-          const responseDescriptor = await axios.get(
-            "http://localhost:4000/obtenerDescriptores",
-            {
-              descriptor: descriptor1,
-            }
-          );
-
-          if (responseDescriptor.data.existe) {
-            toast.warning("Este rostro ya está registrado.");
-            return;
-          }
-
-          const responseNombre = await axios.get(
-            `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
-          );
-
-          if (responseNombre.data.existe) {
-            toast.warning("Ya existe un empleado con este nombre y apellido.");
-            return;
-          }
-
-          // Procede a registrar si el rostro y el nombre son únicos
-          const registroResponse = await axios.post(
-            "http://localhost:4000/detect",
-            {
-              nombre,
-              apellido,
-              imageBlob: capturedImageData,
-              descriptors: descriptor1,
-            }
-          );
-
-          toast.success("¡Empleado registrado exitosamente!");
-        } catch (error) {
-          console.error("Error en la solicitud de registro:", error);
-          toast.error(
-            "Estas intentando registrar el mismo empleado pero con distinto nombre/apellido."
-          );
-        }
-      } else {
+      if (detections.length > 1) {
         toast.warning("Detectados múltiples rostros. Inténtalo de nuevo.");
+        return;
+      }
+
+      // Aquí es donde debes asegurarte de extraer el descriptor correctamente
+      const descriptor1 = detections[0].descriptor;
+
+      const responseDescriptor = await axios.post(
+        "http://localhost:4000/obtenerDescriptores",
+        {
+          descriptor: JSON.stringify(descriptor1),
+        }
+      );
+
+      if (responseDescriptor.data.match) {
+        toast.warning("Este rostro ya está registrado.");
+        return;
+      }
+
+      const responseNombre = await axios.get(
+        `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
+      );
+
+      if (responseNombre.data.existe) {
+        toast.warning("Ya existe un empleado con este nombre y apellido.");
+        return;
+      }
+
+      // Procede a registrar si el rostro y el nombre son únicos
+      const registroResponse = await axios.post(
+        "http://localhost:4000/detect",
+        {
+          nombre,
+          apellido,
+          imageBlob: capturedImageData,
+          descriptors: JSON.stringify(descriptor1),
+        }
+      );
+
+      if (registroResponse.data) {
+        toast.success("¡Empleado registrado exitosamente!");
       }
     } catch (error) {
-      console.error("Error al capturar la imagen:", error);
-      toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
+      console.error("Error durante la captura o el registro:", error);
+      toast.error("Error durante la captura o el registro.");
     }
   };
 

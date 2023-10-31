@@ -53,6 +53,12 @@ app.post("/detect", async (req, res) => {
       return res.status(400).json({ error: "Usuario registrado" });
     }
 
+    const existingDescriptor = await verificarDescriptor(descriptors);
+
+    if (existingDescriptor) {
+      return res.status(400).json({ error: "Rostro Existente en BD" });
+    }
+
     const imageName = `captura_${Date.now()}.png`;
 
     const imageData = imageBlob.split("base64,")[1];
@@ -86,16 +92,6 @@ app.post("/detect", async (req, res) => {
   }
 });
 
-app.get("/validate", async (req, res) => {
-  try {
-    const { nombre, apellido } = req.query;
-    const existingRecord = await checkExistingRecord(nombre, apellido);
-    res.json({ existe: existingRecord });
-  } catch (error) {
-    console.error("Error al verificar el registro:", error);
-    res.status(500).json({ error: "Error al verificar el registro" });
-  }
-});
 async function checkExistingRecord(nombre, apellido) {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM rostros WHERE nombre = ? AND apellido = ?";
@@ -112,21 +108,57 @@ async function checkExistingRecord(nombre, apellido) {
   });
 }
 
-app.get("/obtenerDescriptores", async (req, res) => {
+app.post("/obtenerDescriptores", async (req, res) => {
   try {
-    const sql = "SELECT descriptors FROM rostros";
-    db.query(sql, (err, result) => {
-      if (err) {
-        console.error("Error al obtener descriptores:", err);
-        res.status(500).json({ error: "Error al obtener descriptores" });
-      } else {
-        const descriptores = result.map((row) => JSON.parse(row.descriptors));
-        res.json(descriptores);
-      }
-    });
+    const descriptorRecibido = JSON.parse(req.body.descriptor);
+    const resultado = await verificarDescriptor(descriptorRecibido);
+    res.json(resultado);
   } catch (error) {
     console.error("Error al procesar la solicitud:", error);
     res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
+async function verificarDescriptor(descriptorRecibido) {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM rostros";
+
+    db.query(sql, (err, results) => {
+      if (err) {
+        console.error("Error al obtener descriptores:", err);
+        reject({ error: "Error al obtener descriptores" });
+      } else {
+        for (const row of results) {
+          const descriptorBD = JSON.parse(row.descriptors);
+
+          const distance = faceapi.euclideanDistance(
+            descriptorRecibido,
+            descriptorBD
+          );
+
+          if (distance < 0.6) {
+            resolve({
+              match: true,
+              nombre: row.nombre,
+              apellido: row.apellido,
+            });
+            return;
+          }
+        }
+        resolve({ match: false });
+      }
+    });
+  });
+}
+
+app.get("/validate", async (req, res) => {
+  try {
+    const { nombre, apellido } = req.query;
+    const existingRecord = await checkExistingRecord(nombre, apellido);
+    res.json({ existe: existingRecord });
+  } catch (error) {
+    console.error("Error al verificar el registro:", error);
+    res.status(500).json({ error: "Error al verificar el registro" });
   }
 });
 
@@ -142,7 +174,7 @@ app.get("/capturas", async (req, res) => {
 });
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+  res.sendFile(path.join(__dirname, "build"));
 });
 
 app.listen(PORT, () => {
