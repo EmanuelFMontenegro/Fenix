@@ -2,18 +2,22 @@ import React, { useState, useRef, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
+<<<<<<< HEAD
 import { Modal, Box, Typography, Button } from "@mui/material";
+=======
+import { Typography, Button } from "@mui/material";
+>>>>>>> main
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./deteccion.scss";
 
 const DeteccionFacial = () => {
-  const canvasRef = useRef(null);
-  const videoRef = useRef(null);
-  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const videoRef = useRef();
+  const [modelsLoaded, setModelsLoaded] = useState(true);
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [buttonColor, setButtonColor] = useState("primary");
+<<<<<<< HEAD
   const [showRegistroExistenteModal, setShowRegistroExistenteModal] = useState(false);
   const [error, setError] = useState(null);
 
@@ -50,6 +54,25 @@ const DeteccionFacial = () => {
 
     cargarCamera();
   }, []);
+=======
+  const [isRegistrado, setIsRegistrado] = useState(false);
+  const [error, setError] = useState(null);
+  const [inputError, setInputError] = useState({
+    nombre: false,
+    apellido: false,
+  });
+
+  const handleInput = (e, field) => {
+    const value = e.target.value;
+    if (/^[a-zA-Z\s]*$/.test(value) || value === "") {
+      if (field === "nombre") setNombre(value);
+      else setApellido(value);
+      setInputError((prevState) => ({ ...prevState, [field]: false }));
+    } else {
+      setInputError((prevState) => ({ ...prevState, [field]: true }));
+    }
+  };
+>>>>>>> main
 
   useEffect(() => {
     const handleResize = () => {
@@ -97,6 +120,7 @@ const DeteccionFacial = () => {
   useEffect(() => {
     const detect = async () => {
       try {
+<<<<<<< HEAD
         const newDetections = await faceapi
           .detectAllFaces(
             videoRef.current,
@@ -135,6 +159,49 @@ const DeteccionFacial = () => {
             context.fillText(`Género: ${detection.gender || "Desconocido"}`, x, y - 30);
             context.fillText(`Emociones: ${getDominantEmotion(detection.expressions)}`, x, y - 50);
           }
+=======
+        await faceapi.nets.tinyFaceDetector.loadFromUri("/weights");
+        await faceapi.nets.faceLandmark68Net.loadFromUri("/weights");
+        await faceapi.nets.faceRecognitionNet.loadFromUri("/weights");
+        await faceapi.nets.ageGenderNet.loadFromUri("/weights");
+        await faceapi.nets.faceExpressionNet.loadFromUri("/weights");
+
+        const video = videoRef.current;
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {},
+        });
+        video.srcObject = stream;
+
+        video.addEventListener("play", async () => {
+          const displaySize = {
+            width: video.width,
+            height: video.height,
+          };
+
+          faceapi.matchDimensions(video, displaySize);
+
+          const detectionOptions = new faceapi.TinyFaceDetectorOptions();
+
+          setInterval(async () => {
+            const detections = await faceapi
+              .detectAllFaces(video, detectionOptions)
+              .withFaceLandmarks()
+              .withFaceDescriptors();
+
+            const resizedDetections = faceapi.resizeResults(
+              detections,
+              displaySize
+            );
+
+            const canvas = document.getElementById("overlay");
+            if (canvas) {
+              const ctx = canvas.getContext("2d");
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              faceapi.draw.drawDetections(canvas, resizedDetections);
+              faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+            }
+          }, 100);
+>>>>>>> main
         });
       } catch (error) {
         toast.error("Error en la detección de rostros. Por favor, inténtalo de nuevo.");
@@ -171,6 +238,7 @@ const DeteccionFacial = () => {
       const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
+<<<<<<< HEAD
   
       const context = canvas.getContext("2d");
       if (!context) {
@@ -228,17 +296,115 @@ const DeteccionFacial = () => {
     } catch (error) {
       toast.error("Error al capturar la imagen o procesar la detección. Por favor, inténtalo de nuevo.");
       console.error("Error al capturar la imagen o procesar la detección:", error);
+=======
+      const context = canvas.getContext("2d");
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const capturedImageData = canvas.toDataURL("image/jpeg", 0.6);
+
+      if (!capturedImageData.startsWith("data:image/jpeg;base64,")) {
+        toast.error("Error al capturar la imagen. Inténtalo de nuevo.");
+        return;
+      }
+
+      const detections = await faceapi
+        .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptors()
+        .withAgeAndGender()
+        .withFaceExpressions();
+
+      if (detections.length === 0) {
+        toast.warning("Rostro no detectado. ¡Por favor regístrate!");
+        return;
+      }
+
+      if (detections.length > 1) {
+        toast.warning("Detectados múltiples rostros. Inténtalo de nuevo.");
+        return;
+      }
+
+      // Aquí es donde debes asegurarte de extraer el descriptor correctamente
+      const descriptor1 = detections[0].descriptor;
+
+      const responseDescriptor = await axios.post(
+        "http://localhost:4000/obtenerDescriptores",
+        {
+          descriptor: JSON.stringify(descriptor1),
+        }
+      );
+
+      if (responseDescriptor.data.match) {
+        toast.warning("Este rostro ya está registrado.");
+        return;
+      }
+
+      const responseNombre = await axios.get(
+        `http://localhost:4000/validate?nombre=${nombre}&apellido=${apellido}`
+      );
+
+      if (responseNombre.data.existe) {
+        toast.warning("Ya existe un empleado con este nombre y apellido.");
+        return;
+      }
+
+      // Procede a registrar si el rostro y el nombre son únicos
+      const registroResponse = await axios.post(
+        "http://localhost:4000/detect",
+        {
+          nombre,
+          apellido,
+          imageBlob: capturedImageData,
+          descriptors: JSON.stringify(descriptor1),
+        }
+      );
+
+      if (registroResponse.data) {
+        toast.success("¡Empleado registrado exitosamente!");
+      }
+    } catch (error) {
+      console.error("Error durante la captura o el registro:", error);
+      toast.error("Error durante la captura o el registro.");
+>>>>>>> main
     }
   };
   
 
+  const showRegistroExistenteToast = () => {
+    toast.info("¡Ya existe este Registro !", {
+      autoClose: 500,
+      onClose: () => {
+        setNombre("");
+        setApellido("");
+        setIsRegistrado(false);
+      },
+    });
+  };
+
   return (
     <div style={{ display: "flex" }}>
+<<<<<<< HEAD
       <div className="container" style={{ marginRight: "10px" }}>
         <video id="video" autoPlay muted ref={videoRef} />
         <canvas ref={canvasRef} className="overlay-canvas" />
       </div>
 
+=======
+      <video ref={videoRef} autoPlay muted width={640} height={480} />
+      <canvas
+        id="overlay"
+        width={640}
+        height={480}
+        style={{
+          position: "absolute",
+          top: "88px",
+          left: "267px",
+          pointerEvents: "none",
+          color: "#00ffff",
+          zIndex: "1",
+        }}
+        className="overlay-canvas"
+      />
+>>>>>>> main
       <div
         style={{
           border: "1px solid #ccc",
@@ -256,10 +422,10 @@ const DeteccionFacial = () => {
             <input
               type="text"
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              onChange={(e) => handleInput(e, "nombre")}
               className="form-control"
               style={{
-                border: "2px solid aqua",
+                border: inputError.nombre ? "2px solid red" : "2px solid aqua",
                 borderRadius: "4px",
                 color: "#4169e1",
               }}
@@ -271,16 +437,17 @@ const DeteccionFacial = () => {
             <input
               type="text"
               value={apellido}
-              onChange={(e) => setApellido(e.target.value)}
+              onChange={(e) => handleInput(e, "apellido")}
               className="form-control"
               style={{
-                border: "2px solid aqua",
+                border: inputError.apellido
+                  ? "2px solid red"
+                  : "2px solid aqua",
                 borderRadius: "4px",
                 color: "#4169e1",
               }}
             />
           </label>
-
           <br />
           <button
             type="button"
@@ -299,6 +466,7 @@ const DeteccionFacial = () => {
           </button>
         </div>
       </div>
+<<<<<<< HEAD
 
       <Modal
         open={showRegistroExistenteModal}
@@ -351,11 +519,17 @@ const DeteccionFacial = () => {
           </Button>
         </Box>
       </Modal>
+=======
+>>>>>>> main
     </div>
   );
 };
 
+<<<<<<< HEAD
 const style = {
+=======
+const toastStyle = {
+>>>>>>> main
   position: "absolute",
   top: "50%",
   left: "50%",

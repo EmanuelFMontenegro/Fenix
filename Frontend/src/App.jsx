@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/sidebar/Sidebar";
+<<<<<<< HEAD
 import Home from "./pages/home/home";
 import AdminRegistration from './components/AdminRegistration';
 import Login from './pages/login/Login';
@@ -15,6 +16,12 @@ import Empleados from '../src/components/Empleados'
 import Profile from "./components/Profile";
 
 
+=======
+import Home from "./pages/home/Home";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+// import FaceRecognitionComponent from "./components/faceReconigtion/FaceRecognitionComponent";
+>>>>>>> main
 
 const App = () => {
   return (
@@ -45,6 +52,8 @@ const App = () => {
           />
         </Routes>
       </BrowserRouter>
+      <ToastContainer />
+      {/* <FaceRecognitionComponent /> */}
     </div>
   );
 };

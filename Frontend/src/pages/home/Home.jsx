@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
+<<<<<<< HEAD
 import DeteccionFacial from "../../components/deteccion/DeteccionFacial";
 import PanelDeControl from "../../components/PanelDeControl";
+=======
+>>>>>>> main
 import "../home/home.scss";
 
 const Home = () => {

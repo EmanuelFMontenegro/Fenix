@@ -54,11 +54,30 @@ const Sidebar = ({ handleButtonClick }) => {
                 <FaceIcon className="icon" />
                 <span>Detección Facial</span>
               </div>
+<<<<<<< HEAD
             </Link>
           </li>
           <li>
             <Link to="/Asistencia" className="nav-link">
               <div className="nav-button" onClick={() => handleClick({ title: "Asistencia", component: <Asistencia /> })}>
+=======
+            </li>
+          </Link>
+
+          <Link to="/Asistencia" className="nav-link">
+            <li>
+              <div
+                className="nav-button"
+                onClick={() =>
+                  handleClick({
+                    title: "Asistencia",
+                    component: <Asistencia />,
+                    
+                  })
+                  
+                }
+              >
+>>>>>>> main
                 <AccessibilityNewIcon className="icon" />
                 <span>Asistencias</span>
               </div>
