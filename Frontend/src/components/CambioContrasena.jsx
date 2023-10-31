@@ -1,3 +1,4 @@
+// CambioContrasena.js
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -44,7 +45,5 @@ const CambioContrasena = () => {
     </div>
   );
 };
-
-
 
 export default CambioContrasena;

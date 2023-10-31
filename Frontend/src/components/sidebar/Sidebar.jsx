@@ -13,7 +13,7 @@ import {
 import DeteccionFacial from "../deteccion/DeteccionFacial";
 import Asistencia from "../asistencia/Asistencia";
 import logoImage from "../../assets/Fenix.jpg";
-import PanelDeControl from "../PanelDeControl";
+
 
 const Sidebar = ({ handleButtonClick }) => {
   const handleClick = (component) => {

@@ -61,8 +61,8 @@ async function findUserByCorreo(correo) {
 
 async function updateUserPass(correo, pass) {
   try {
-    const updateQuery = 'UPDATE usuarios SET pass = ? WHERE pass = ?';
-    await pool.query(updateQuery, [correo ,pass ]);
+    const updateQuery = 'UPDATE usuarios SET pass = ? WHERE correo = ?';
+    await pool.query(updateQuery, [pass, correo]);
     return true;
   } catch (error) {
     console.error('Error al cambiar la contraseña:', error);

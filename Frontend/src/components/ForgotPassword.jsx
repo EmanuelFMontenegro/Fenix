@@ -28,9 +28,9 @@ function ForgotPassword() {
       const response = await axios.post('/forgot-password', {
         correo: formData.correo,
       });
-
+  
       console.log('Correo validation response:', response.data);
-
+  
       if (response.data.success === true) {
         console.log('El correo proporcionado está registrado');
         setCorreoValidado(true);
