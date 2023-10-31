@@ -4,17 +4,22 @@ const path = require("path");
 const fs = require("fs").promises;
 const canvas = require("canvas");
 const faceapi = require("face-api.js");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const {
+  findUserByUser,
+  updateUserPass,
+  registerAdmin,
+  handleForgotPasswordRequest,
+} = require("./routes/authController");
 const cors = require("cors");
 const { Canvas, Image, ImageData } = canvas;
 const db = require("./db");
-
+const secretKey = "tu-clave-secreta";
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
-
 const app = express();
 app.use(express.json());
-
 const PORT = process.env.PORT || 4000;
-
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
@@ -53,11 +58,11 @@ app.post("/detect", async (req, res) => {
       return res.status(400).json({ error: "Usuario registrado" });
     }
 
-    const existingDescriptor = await verificarDescriptor(descriptors);
+    // const existingDescriptor = await verificarDescriptor(descriptors);
 
-    if (existingDescriptor) {
-      return res.status(400).json({ error: "Rostro Existente en BD" });
-    }
+    // if (existingDescriptor) {
+    //   return res.status(400).json({ error: "Rostro Existente en BD" });
+    // }
 
     const imageName = `captura_${Date.now()}.png`;
 
@@ -71,21 +76,10 @@ app.post("/detect", async (req, res) => {
 
     const sql =
       "INSERT INTO rostros (nombre, apellido, imagen_rostro, descriptors) VALUES (?, ?, ?, ?)";
-    const values = [
-      nombre,
-      apellido,
-      imageName,
-      JSON.stringify(descriptors), // Guardamos los descriptores como una cadena JSON
-    ];
+    const values = [nombre, apellido, imageName, JSON.stringify(descriptors)];
 
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("Error al guardar en la base de datos:", err);
-        res.status(500).json({ error: "Error al guardar en la base de datos" });
-      } else {
-        res.json({ imageName });
-      }
-    });
+    await db.query(sql, values);
+    res.json({ imageName });
   } catch (error) {
     console.error("Error al procesar la imagen:", error);
     res.status(500).json({ error: "Error al procesar la imagen" });
@@ -93,19 +87,9 @@ app.post("/detect", async (req, res) => {
 });
 
 async function checkExistingRecord(nombre, apellido) {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM rostros WHERE nombre = ? AND apellido = ?";
-    const values = [nombre, apellido];
-
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("Error al buscar en la base de datos:", err);
-        reject(err);
-      } else {
-        resolve(result.length > 0);
-      }
-    });
-  });
+  const sql = "SELECT * FROM rostros WHERE nombre = ? AND apellido = ?";
+  const [rows] = await db.query(sql, [nombre, apellido]);
+  return rows.length > 0;
 }
 
 app.post("/obtenerDescriptores", async (req, res) => {
@@ -120,35 +104,26 @@ app.post("/obtenerDescriptores", async (req, res) => {
 });
 
 async function verificarDescriptor(descriptorRecibido) {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM rostros";
+  const sql = "SELECT * FROM rostros";
+  const [results] = await db.query(sql);
 
-    db.query(sql, (err, results) => {
-      if (err) {
-        console.error("Error al obtener descriptores:", err);
-        reject({ error: "Error al obtener descriptores" });
-      } else {
-        for (const row of results) {
-          const descriptorBD = JSON.parse(row.descriptors);
+  for (const row of results) {
+    const descriptorBD = JSON.parse(row.descriptors);
 
-          const distance = faceapi.euclideanDistance(
-            descriptorRecibido,
-            descriptorBD
-          );
+    const distance = faceapi.euclideanDistance(
+      descriptorRecibido,
+      descriptorBD
+    );
 
-          if (distance < 0.6) {
-            resolve({
-              match: true,
-              nombre: row.nombre,
-              apellido: row.apellido,
-            });
-            return;
-          }
-        }
-        resolve({ match: false });
-      }
-    });
-  });
+    if (distance < 0.6) {
+      return {
+        match: true,
+        nombre: row.nombre,
+        apellido: row.apellido,
+      };
+    }
+  }
+  return { match: false };
 }
 
 app.get("/validate", async (req, res) => {
@@ -170,6 +145,137 @@ app.get("/capturas", async (req, res) => {
   } catch (error) {
     console.error("Error al obtener nombres de capturas:", error);
     res.status(500).json({ error: "Error al obtener nombres de capturas" });
+  }
+});
+function requireAuth(req, res, next) {
+  const token = req.headers["authorization"];
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Acceso no autorizado" });
+  } else {
+    jwt.verify(token, secretKey, (err, decoded) => {
+      if (err) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Acceso no autorizado" });
+      } else {
+        req.user = decoded;
+        next();
+      }
+    });
+  }
+}
+
+
+app.post("/signup", async (req, res) => {
+  try {
+    const { user, pass, correo } = req.body;
+    const response = await registerAdmin(user, pass, correo);
+    res.status(response.success ? 200 : 400).json(response);
+  } catch (error) {
+    console.error("Error al procesar la solicitud:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error interno del servidor" });
+  }
+});
+
+
+app.post("/login", async (req, res) => {
+  try {
+    const { user, pass } = req.body;
+    const usuario = await findUserByUser(user);
+
+    if (!usuario) {
+      console.log("Usuario no encontrado en la base de datos");
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no encontrado en la base de datos",
+      });
+    }
+
+    const ispassValid = await bcrypt.compare(pass, usuario.pass);
+
+    if (!ispassValid) {
+      console.log("Contraseña incorrecta");
+      return res
+        .status(401)
+        .json({ success: false, message: "Contraseña incorrecta" });
+    }
+
+    // Generar token JWT (Paso 6)
+    const token = jwt.sign({ user: usuario.user }, "tu-clave-secreta", {
+      expiresIn: "1h",
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Inicio de sesión exitoso", token });
+    console.log("Inicio de sesión exitoso. Token generado:", token);
+  } catch (error) {
+    console.error("Error al procesar la solicitud:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error interno del servidor" });
+  }
+});
+
+app.post("/forgot-pass", async (req, res) => {
+  const { correo } = req.body;
+
+  if (!correo) {
+    return res
+      .status(400)
+      .json({ success: false, message: "El correo no fue proporcionado" });
+  }
+
+  const user = await findUserByCorreo(correo);
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "El correo proporcionado no está registrado",
+    });
+  }
+
+ 
+  const pass = "nueva_contraseña"; 
+
+  const response = await handleForgotPasswordRequest(correo, pass);
+  res.status(response.success ? 200 : 400).json(response);
+});
+
+app.post("/resetpass", async (req, res) => {
+  const { correo, pass } = req.body; 
+
+  if (!correo || !pass) {
+    return res.status(400).json({
+      success: false,
+      message: "Correo o nueva contraseña no proporcionados",
+    });
+  }
+
+  const user = await findUserByCorreo(correo);
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "El correo proporcionado no está registrado",
+    });
+  }
+
+  const hashedpass = await bcrypt.hash(pass, 10);
+  const updateSuccess = await updateUserPass(correo, hashedpass);
+
+  if (updateSuccess) {
+    res
+      .status(200)
+      .json({ success: true, message: "Contraseña cambiada con éxito" });
+  } else {
+    res
+      .status(500)
+      .json({ success: false, message: "Error al cambiar la contraseña" });
   }
 });
 

@@ -1,0 +1,84 @@
+/* Estilos para el contenedor principal */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* 100% de la altura de la ventana */
+  background-color: #7c6868; 
+}
+
+/* Estilos para el formulario */
+.login-form {
+  background-color: #690303; /* Color de fondo del formulario */
+  padding: 20px;
+  max-width: 400px; 
+  width: 90%;
+  border-radius: 5px; 
+  box-shadow: 0px 0px 10px #e75804;
+}
+.login-link {
+  background-color: #520606;
+}
+
+/* Estilos para el encabezado del formulario */
+.login-form h2 {
+  margin-bottom: 20px;
+  text-align: center;
+  color: #fff; 
+}
+
+/* Estilos para las etiquetas del formulario */
+.login-form label {
+  font-weight: bold;
+  color: #fff; 
+}
+
+/* Estilos para los campos de entrada */
+.login-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc; 
+  border-radius: 3px;
+}
+
+
+
+/* Estilos para el botón al pasar el mouse (hover) */
+.btn-custom:hover {
+  background-color: #860808;
+}
+
+
+/* Estilos para los enlaces */
+a {
+  text-decoration: none; /* Eliminar subrayado de enlaces */
+  color: inherit; 
+}
+
+/* Estilos para el enlace de "Recuperar Contraseña" */
+.login-form a {
+  color: #fff; 
+  margin-top: 10px; 
+  display: block; 
+  text-align: center; 
+  background-color: #520606; 
+  padding: 10px 0; 
+  border-radius: 3px; 
+}
+
+/* Estilos para el enlace de "Recuperar Contraseña"(hover) */
+.login-form a:hover  {
+  background-color: #860808;
+  color: #fff; 
+}
+.login-form a:focus{
+  background-color: #860808; 
+  color: #fff; 
+}
+.login-form span.login-text {
+  color: #fff; 
+  display: block; 
+  text-align: center; 
+  margin-top: 15px; 
+}
