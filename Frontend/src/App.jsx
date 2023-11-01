@@ -31,10 +31,7 @@ const App = () => {
                   <Sidebar />
                   <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route
-                      path="/paneldecontrol"
-                      element={<PanelDeControl />}
-                    />
+                    <Route path="/paneldecontrol" element={<PanelDeControl />} />
                     <Route path="/Empleados" element={<Empleados />} />
                     <Route path="/Profile" element={<Profile />} />
                   </Routes>

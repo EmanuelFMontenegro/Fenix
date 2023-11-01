@@ -1,29 +1,21 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { handleForgotPasswordRequest } = require("./authController");
+const pool = require('../db');
 
-router.post("/forgot-password", async (req, res) => {
+router.post('/check-email', async (req, res) => {
+  const { correo } = req.body;
+
   try {
-    const { correo } = req.body;
+    const [existingEmail] = await pool.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
 
-    if (!correo) {
-      return res
-        .status(400)
-        .json({ success: false, message: "El correo no fue proporcionado" });
-    }
-
-    const result = await handleForgotPasswordRequest(correo);
-
-    if (result.success) {
-      return res.status(200).json(result);
+    if (existingEmail.length > 0) {
+      return res.status(200).json({ exists: true, message: 'Operación exitosa' });
     } else {
-      return res.status(500).json(result);
+      return res.status(200).json({ exists: false, message: 'Correo no registrado' });
     }
   } catch (error) {
-    console.error("Error en forgot-password:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error en forgot-password" });
+    console.error('Error al verificar el correo:', error);
+    return res.status(500).json({ exists: false, message: 'Error interno del servidor' });
   }
 });
 

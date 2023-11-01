@@ -3,7 +3,7 @@ const mysql = require("mysql2/promise");
 const dbConfig = {
   host: "localhost",
   user: "root",
-  password: "emanuel555",
+  password: "root",
   database: "bd_fenix",
 };
 

@@ -8,9 +8,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const {
   findUserByUser,
+  findUserByCorreo,
   updateUserPass,
   registerAdmin,
-  handleForgotPasswordRequest,
+  handleForgotPasswordRequest, 
 } = require("./routes/authController");
 const cors = require("cors");
 const { Canvas, Image, ImageData } = canvas;
@@ -36,6 +37,9 @@ app.use(
     },
   })
 );
+
+
+const pool = require('./db');
 
 app.use(express.static(path.join(__dirname, "build")));
 app.use("/weights", express.static("weights"));
@@ -221,63 +225,51 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/forgot-pass", async (req, res) => {
+
+// Ruta para verificar el correo
+app.post('/check-email', async (req, res) => {
   const { correo } = req.body;
 
-  if (!correo) {
-    return res
-      .status(400)
-      .json({ success: false, message: "El correo no fue proporcionado" });
-  }
+  try {
+    const [existingEmail] = await pool.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
 
-  const user = await findUserByCorreo(correo);
-
-  if (!user) {
-    return res.status(400).json({
-      success: false,
-      message: "El correo proporcionado no está registrado",
-    });
-  }
-
- 
-  const pass = "nueva_contraseña"; 
-
-  const response = await handleForgotPasswordRequest(correo, pass);
-  res.status(response.success ? 200 : 400).json(response);
-});
-
-app.post("/resetpass", async (req, res) => {
-  const { correo, pass } = req.body; 
-
-  if (!correo || !pass) {
-    return res.status(400).json({
-      success: false,
-      message: "Correo o nueva contraseña no proporcionados",
-    });
-  }
-
-  const user = await findUserByCorreo(correo);
-
-  if (!user) {
-    return res.status(400).json({
-      success: false,
-      message: "El correo proporcionado no está registrado",
-    });
-  }
-
-  const hashedpass = await bcrypt.hash(pass, 10);
-  const updateSuccess = await updateUserPass(correo, hashedpass);
-
-  if (updateSuccess) {
-    res
-      .status(200)
-      .json({ success: true, message: "Contraseña cambiada con éxito" });
-  } else {
-    res
-      .status(500)
-      .json({ success: false, message: "Error al cambiar la contraseña" });
+    if (existingEmail.length > 0) {
+      return res.status(200).json({ exists: true, message: 'Operación exitosa' });
+    } else {
+      return res.status(200).json({ exists: false, message: 'Correo no registrado' });
+    }
+  } catch (error) {
+    console.error('Error al verificar el correo:', error);
+    return res.status(500).json({ exists: false, message: 'Error interno del servidor' });
   }
 });
+
+
+app.post('/forgot-password', async (req, res) => {
+  try {
+    const { correo, pass } = req.body;
+
+    const user = await findUserByCorreo(correo);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const updateResult = await updateUserPass(correo, pass);
+
+    if (updateResult.success) {
+      res.status(200).json({ success: true, message: 'Contraseña cambiada correctamente' });
+    } else {
+      res.status(400).json({ success: false, message: 'No se pudo cambiar la contraseña' });
+    }
+  } catch (error) {
+    console.error('Error al cambiar la contraseña:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor al cambiar la contraseña' });
+  }
+});
+
+
+
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "build"));
