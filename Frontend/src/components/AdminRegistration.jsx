@@ -26,35 +26,34 @@ function AdminRegistration() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Datos a enviar al backend:', formData);
     setValidationErrors([]);
     
     try {
       if (formData.user.trim() !== '' && formData.pass.trim() !== '' && formData.correo.trim() !== '') {
         const response = await axios.post('http://localhost:4000/signup', formData);
-  
+    
         if (response.data.success) {
           toast.success('Registro exitoso. Redirigiendo...', { autoClose: 1000, onClose: () => navigate('/Login') });
-        } else {
-          if (response.data.message === 'Correo Existente') {
-            toast.error('El correo electrónico ya está en uso. Por favor, ingrese otro correo.');
-          } else if (response.data.message === 'Usuario Existente') {
-            toast.error('El usuario ya está registrado. Por favor, elija otro nombre de usuario.');
-          } 
-          
         }
       } else {
         console.error('Por favor, complete todos los campos.');
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        toast.error('Error en el registro. Verifique los campos.');
+        if (error.response.data.message === 'CorreoExistente') {
+          toast.error('El correo electrónico ya está en uso. Por favor, ingrese otro correo.');
+        } else if (error.response.data.message === 'UsuarioExistente') {
+          toast.error('El usuario ya está registrado. Por favor, elija otro nombre de usuario.');
+        } else {
+          toast.error('Nombre de usuario y correo electrónico ya registrados. Por favor, ingrese datos diferentes.');
+        }
       } else {
         console.error('Error al registrar el administrador:', error.message);
         toast.error('Error al registrar el administrador.');
       }
     }
-  }
+  } 
+
   
   return (
     <div className="login-container">

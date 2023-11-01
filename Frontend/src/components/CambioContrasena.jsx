@@ -1,3 +1,4 @@
+// CambioContrasena.js
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -15,7 +16,7 @@ const CambioContrasena = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/resetpass', {
+      const response = await axios.post('/resetpassword', {
         resetToken,
         newpass: pass,
       });
@@ -44,7 +45,5 @@ const CambioContrasena = () => {
     </div>
   );
 };
-
-
 
 export default CambioContrasena;

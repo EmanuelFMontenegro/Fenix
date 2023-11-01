@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import EmpleadoCard from './EmpleadoCard'; 
+import EmpleadoCard from './EmpleadoCard';
+
 const Empleados = () => {
   const [empleados, setEmpleados] = useState([]);
 
-  // Suponiendo que hay una función fetchData que obtiene los empleados
   const fetchData = async () => {
-    // Llamar a la API o servicio para obtener los datos de los empleados
     try {
-      const data = await fetch('URL_DEL_ENDPOINT_PARA_OBTENER_EMPLEADOS');
-      const empleadosData = await data.json();
-      setEmpleados(empleadosData); // Actualizar el estado con los datos obtenidos
+      const response = await fetch('/empleados');
+      if (!response.ok) {
+        throw new Error('Error al obtener los datos');
+      }
+      const data = await response.json();
+      setEmpleados(data); 
     } catch (error) {
       console.error('Error al obtener los empleados:', error);
     }
   };
 
   useEffect(() => {
-    fetchData(); // Llamar a fetchData al cargar el componente o cuando cambie alguna dependencia
-  }, []); // El segundo parámetro vacío garantiza que se ejecute solo una vez
+    fetchData(); 
+  }, []); 
 
   return (
     <div className="empleados">
@@ -26,8 +28,8 @@ const Empleados = () => {
         {empleados.map((empleado, index) => (
           <EmpleadoCard
             key={index}
-            nombre={empleado.nombre}
-            foto={empleado.foto}
+            nombre={empleado.usuario_nombre}
+            foto={empleado.foto} 
             informacionAdicional={empleado.informacionAdicional}
           />
         ))}

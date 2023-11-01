@@ -1,33 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { findUserByCorreo, updateUserPass } = require('./userController'); 
+const pool = require('../db');
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/check-email', async (req, res) => {
+  const { correo } = req.body;
+
   try {
-    const { correo } = req.body;
+    const [existingEmail] = await pool.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
 
-    if (!correo) {
-      return res.status(400).json({ success: false, message: 'El correo no fue proporcionado' });
-    }
-
-    const user = await findUserByCorreo(correo);
-
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'El correo proporcionado no está registrado' });
-    }
-
-    const nuevaContrasena = generarNuevaContrasena(); 
-
-    const updateSuccess = await updateUserPass(correo, nuevaContrasena);
-
-    if (updateSuccess) {
-      res.status(200).json({ success: true, message: 'Contraseña cambiada con éxito' });
+    if (existingEmail.length > 0) {
+      return res.status(200).json({ exists: true, message: 'Operación exitosa' });
     } else {
-      res.status(500).json({ success: false, message: 'Error al cambiar la contraseña' });
+      return res.status(200).json({ exists: false, message: 'Correo no registrado' });
     }
   } catch (error) {
-    console.error('Error en forgot-password:', error);
-    res.status(500).json({ success: false, message: 'Error en forgot-password' });
+    console.error('Error al verificar el correo:', error);
+    return res.status(500).json({ exists: false, message: 'Error interno del servidor' });
   }
 });
 

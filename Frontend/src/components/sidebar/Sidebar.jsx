@@ -13,7 +13,7 @@ import {
 import DeteccionFacial from "../deteccion/DeteccionFacial";
 import Asistencia from "../asistencia/Asistencia";
 import logoImage from "../../assets/Fenix.jpg";
-import PanelDeControl from "../PanelDeControl";
+
 
 const Sidebar = ({ handleButtonClick }) => {
   const handleClick = (component) => {
@@ -84,7 +84,7 @@ const Sidebar = ({ handleButtonClick }) => {
             <p className="title">Usuarios</p>
           </li>
           <li>
-            <Link to="/profile" className="nav-link">
+            <Link to="/Profile" className="nav-link">
               <div className="nav-button">
                 <AccountCircleOutlinedIcon className="icon" />
                 <span>Perfil</span>

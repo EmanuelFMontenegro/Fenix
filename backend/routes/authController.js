@@ -1,20 +1,19 @@
 const bcrypt = require('bcrypt');
 const pool = require('../db');
 
+
 async function registerAdmin(user, pass, correo) {
   try {
-    const existingUserQuery = 'SELECT * FROM usuarios WHERE user = ?';
-    const existingCorreoQuery = 'SELECT * FROM usuarios WHERE correo = ?';
+    const [existingUser] = await pool.query('SELECT * FROM usuarios WHERE user = ?', [user]);
+    const [existingCorreo] = await pool.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
 
-    const [existingUser] = await pool.query(existingUserQuery, [user]);
-    const [existingCorreo] = await pool.query(existingCorreoQuery, [correo]);
-    console.log('Existing User:', existingUser);
-    console.log('Existing Correo:', existingCorreo);
+    console.log('Usuario Existente:', existingUser);
+    console.log('Correo Existente:', existingCorreo);
 
     if (existingUser.length > 0) {
-      return { success: false, message: 'Usuario Existente' };
+      return { success: false, message: 'UsuarioExistente' };
     } else if (existingCorreo.length > 0) {
-      return { success: false, message: 'Correo Existente' };
+      return { success: false, message: 'CorreoExistente' };
     } else {
       const hashedpass = await bcrypt.hash(pass, 10);
       const rol_id = 1;
@@ -28,6 +27,8 @@ async function registerAdmin(user, pass, correo) {
     throw error;
   }
 }
+
+
 
 
 async function findUserByUser(user) {
@@ -61,41 +62,48 @@ async function findUserByCorreo(correo) {
 
 async function updateUserPass(correo, pass) {
   try {
-    const updateQuery = 'UPDATE usuarios SET pass = ? WHERE pass = ?';
-    await pool.query(updateQuery, [correo ,pass ]);
-    return true;
+    if (typeof pass !== 'string' || !pass) {
+      console.error('Error: La contraseña no es una cadena válida');
+      return false;
+    }
+
+    const hashedPass = await bcrypt.hash(pass, 10);// Se encripta la nueva contraseña.
+    const updateQuery = 'UPDATE usuarios SET pass = ? WHERE correo = ?'; // Se prepara la consulta SQL para actualizar la contraseña.
+    await pool.query(updateQuery, [hashedPass, correo]); // Se ejecuta la consulta con la contraseña encriptada y el correo del usuario.
+    return true; // Si la actualización tiene éxito, se devuelve 'true'.
   } catch (error) {
     console.error('Error al cambiar la contraseña:', error);
-    return false;
+    return false; // Si hay un error, se captura y devuelve 'false'.
   }
 }
 
-async function handleForgotPasswordRequest(correo, pass) {
+// Ruta para actualizar la contraseña
+async function handleForgotPasswordRequest(req, res) {
   try {
-    const user = await findUserByCorreo(correo);
-    if (user) {
-      // Verifica que se proporcionó una nueva contraseña
-      if (pass) {
-        // Actualiza la contraseña del usuario
-        const hashedpass = await bcrypt.hash(pass, 10);
-        const updateSuccess = await updateUserPass(correo, hashedpass);
+    const { correo, pass } = req.body;
 
-        if (updateSuccess) {
-          return { success: true, message: 'Contraseña cambiada con éxito' };
-        } else {
-          return { success: false, message: 'Error al cambiar la contraseña' };
-        }
-      } else {
-        return { success: false, message: 'La nueva contraseña no fue proporcionada' };
-      }
+    const user = await findUserByCorreo(correo);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const updateResult = await updateUserPass(correo, pass);
+
+    if (updateResult.success) {
+      res.status(200).json({ success: true, message: 'Contraseña actualizada con éxito' });
     } else {
-      return { success: false, message: 'El correo electrónico no se encuentra registrado' };
+      res.status(400).json({ success: false, message: 'No se pudo cambiar la contraseña' });
     }
   } catch (error) {
-    console.error('Error al manejar la solicitud de recuperación de contraseña:', error);
-    return { success: false, message: 'Error interno del servidor' };
+    console.error('Error al cambiar la contraseña:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor al cambiar la contraseña' });
   }
 }
+
+
+
+
 module.exports = {
   findUserByUser,
   findUserByCorreo,

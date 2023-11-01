@@ -1,5 +1,6 @@
 const db = require("../db");
 
+
 // Controlador para obtener todos los bd_fenix.usuarios
 const getUsers = (req, res) => {
   // Consulta SQL para obtener todos los bd_fenix.usuarios

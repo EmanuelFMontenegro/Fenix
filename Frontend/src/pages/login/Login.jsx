@@ -28,35 +28,34 @@ function Login() {
     });
   };
   console.log('Credenciales de inicio de sesión:', formData);
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (formData.user.trim() !== '' && formData.pass.trim() !== '') {
-        const userData = {
-          user: formData.user,
-          pass: formData.pass,
-        };
-  
-        const response = await axios.post('http://localhost:4000/login', userData);
-        console.log('response.data.success:', response.data.success);
-       
-        if (response.data.success === true) {
-          localStorage.setItem('authToken', response.data.token);
-          toast.success('Inicio de sesión exitoso');
-          navigate('/Sidebar');
-        } else if (response.data.message === 'Usuario no encontrado en la base de datos') {
-          toast.error('Nombre de usuario incorrecto', { className: 'toast-error show' });
-        } else if (response.data.message === 'Contraseña incorrecta') {
-          toast.error('Contraseña incorrecta', { className: 'toast-error show' }
-          );
-        } else {
-          toast.error('Error desconocido');
-        }    
+  e.preventDefault();
+  try {
+    if (formData.user.trim() !== '' && formData.pass.trim() !== '') {
+      const userData = {
+        user: formData.user,
+        pass: formData.pass,
+      };
+
+      const response = await axios.post('http://localhost:4000/login', userData);
+      console.log('response.data.success:', response.data.success);
+
+      if (response.data.success === true) {
+        localStorage.setItem('authToken', response.data.token);
+        toast.success('Inicio de sesión exitoso');
+        navigate('/Sidebar');
       }
-    } catch (error) {
-      console.error('Error al enviar los datos:', error);
     }
-  };
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      if (error.response.data.message === 'Usuario no encontrado en la base de datos') {
+        toast.error('Nombre de usuario incorrecto', { className: 'toast-error show' });
+      } else if (error.response.data.message === 'Contraseña incorrecta') {
+        toast.error('Contraseña incorrecta', { className: 'toast-error show' });
+      } 
+  }}};
+  
 
   return (
     <div className="login-container">
@@ -102,5 +101,5 @@ function Login() {
     </div>
   );
 };
-
+  
 export default Login;

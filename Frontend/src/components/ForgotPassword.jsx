@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../styles/ForgotPassword.css';
+
+const instance = axios.create({
+  baseURL: 'http://localhost:4000/'
+});
 
 function ForgotPassword() {
   const [formData, setFormData] = useState({
@@ -11,6 +17,7 @@ function ForgotPassword() {
   });
 
   const [correoValidado, setCorreoValidado] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,41 +27,53 @@ function ForgotPassword() {
     });
   };
 
-  const navigate = useNavigate();
-
   const handleCorreoValidation = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
-      const response = await axios.post('/forgot-password', {
-        correo: formData.correo,
-      });
-
-      if (response.data.success === true) {
-        console.log('El correo proporcionado está registrado');
+      const response = await checkEmailExists(formData.correo);
+      if (response.exists) {
         setCorreoValidado(true);
-      } else {
-        console.error('Error en la validación de correo:', response.data.message);
       }
     } catch (error) {
       console.error('Error al validar el correo:', error);
     }
   };
 
+  const checkEmailExists = async (correo) => {
+    try {
+      const response = await instance.post('/check-email', { correo });
+      return response.data;
+    } catch (error) {
+      console.error('Error al verificar el correo:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/resetpassword', {
-        correo: formData.correo,
-        pass: formData.pass,
-      });
+      if (correoValidado) {
+        const response = await instance.post('/forgot-password', {
+          correo: formData.correo,
+          pass: formData.pass,
+        });
 
-      if (response.data.success === true) {
-        console.log('Contraseña cambiada con éxito');
-      } else {
-        console.error('Error al cambiar la contraseña:', response.data.message);
+        if (response.data.success === true) {
+          toast.success(response.data.message);
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          toast.error(response.data.message);
+        }
       }
     } catch (error) {
       console.error('Error al enviar los datos:', error);
+
+      if (error.response && error.response.status === 400) {
+        toast.success('Contraseña cambiada correctamente');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        toast.error('Ocurrió un error al cambiar la contraseña.');
+      }
     }
   };
 
@@ -98,7 +117,7 @@ function ForgotPassword() {
           </>
         )}
         <div className="d-flex justify-content-end">
-          <Button variant="custom" className="btn-custom volver" onClick={() => navigate('/Login')}>
+          <Button variant="custom" className="btn-custom volver" onClick={() => navigate('/login')}>
             Volver
           </Button>
         </div>
