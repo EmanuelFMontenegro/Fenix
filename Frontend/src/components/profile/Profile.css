@@ -1,0 +1,54 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.profile-selector {
+  text-align: center;
+}
+
+.profile-selector h1 {
+  margin-bottom: 20px;
+}
+
+.boton1,
+.boton2,
+.boton3 {
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  width: 100%;
+}
+
+.boton1 {
+  background-color: #520606; 
+  color: white; 
+}
+
+.boton2 {
+  background-color: #520606;
+  color: white;
+}
+
+.boton3 {
+  background-color: #520606;
+  color: white;
+}
+
+.boton1:hover {
+  background-color: #860808;
+}
+
+.boton2:hover {
+  background-color: #860808;
+}
+
+.boton3:hover {
+  background-color: #860808;
+}
